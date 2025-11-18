@@ -6,30 +6,32 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d0b1c;--card:#14132b;--accent:#a855f7;--accent2:#c17aff;--text:#e2e8f0;--muted:#94a3b8;--success:#00ffaa;--danger:#ff3366;--border:#2d2a57}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;background-image:radial-gradient(circle at top right,#1a1650 0%,transparent 50%)}
-#loginScreen{background:linear-gradient(135deg,#14132b,#0f0f22);width:420px;padding:50px 40px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center;border:1px solid var(--border)}
-#loginScreen h1{font-size:36px;margin-bottom:10px;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-#loginScreen input,#loginScreen button{width:100%;padding:16px;border-radius:14px;margin:10px 0;font-size:18px}
-#loginScreen input{background:#1e1c38;border:none;color:white}
-#loginScreen button{background:var(--accent);border:none;color:white;font-weight:600;cursor:pointer}
-#main{display:none;max-width:1400px;width:100%;padding:30px}
-header h1{font-size:44px;text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}
-.card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
-.card h2{font-size:24px;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
-.card h2::before{content:"▹"}
-input,button{width:100%;padding:14px 16px;border-radius:12px;border:none;font-size:16px;margin:8px 0;background:#1e1c38;color:var(--text)}
-button{background:var(--accent);color:white;font-weight:600;cursor:pointer;transition:.2s}
-button:hover{background:var(--accent2);transform:translateY(-2px)}
-button.success{background:#00c853} button.danger{background:var(--danger)}
-.live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:32px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:30px}
-#liveTimer{font-family:'JetBrains Mono',monospace;font-size:72px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
-.stats{font-size:24px;margin:5px 0}
-footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
+  :root{--bg:#0d0b1c;--card:#14132b;--accent:#a855f7;--accent2:#c17aff;--text:#e2e8f0;--muted:#94a3b8;--success:#00ffaa;--danger:#ff3366;--border:#2d2a57}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;background-image:radial-gradient(circle at top right,#1a1650 0%,transparent 50%)}
+  #loginScreen{background:linear-gradient(135deg,#14132b,#0f0f22);width:420px;padding:50px 40px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,0.6);text-align:center;border:1px solid var(--border)}
+  #loginScreen h1{font-size:36px;margin-bottom:10px;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  #loginScreen input,#loginScreen button{width:100%;padding:16px;border-radius:14px;margin:10px 0;font-size:18px}
+  #loginScreen input{background:#1e1c38;border:none;color:white}
+  #loginScreen button{background:var(--accent);border:none;color:white;font-weight:600;cursor:pointer}
+  #main{display:none;max-width:1400px;width:100%;padding:30px}
+  header h1{font-size:44px;text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:32px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:30px}
+  #liveTimer{font-family:'JetBrains Mono',monospace;font-size:92px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}
+  .card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
+  .card h2{font-size:24px;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+  .card h2::before{content:"▹"}
+  input,button{width:100%;padding:14px 16px;border-radius:12px;border:none;font-size:16px;margin:8px 0;background:#1e1c38;color:var(--text)}
+  button{background:var(--accent);color:white;font-weight:600;cursor:pointer;transition:.2s}
+  button:hover{background:var(--accent2);transform:translateY(-2px)}
+  button.success{background:#00c853} button.danger{background:var(--danger)}
+  .goal-item{background:#1e1c38;padding:14px 18px;border-radius:12px;margin:10px 0;display:flex;gap:12px;align-items:center;border-left:4px solid var(--accent)}
+  .status{display:inline-block;padding:10px 26px;border-radius:50px;font-weight:600;background:#333;color:#ff9800;margin-top:10px}
+  footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
@@ -43,21 +45,22 @@ footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
 
 <div id="main">
   <header><h1>Ceres Donothon Control Panel</h1></header>
-
+  
   <div class="live-preview">
+    <h2 style="color:#fff;margin:0">Donothon by <span id="liveName">Ceres</span></h2>
     <div id="liveTimer">03:00:00</div>
-    <div class="stats">Raised: $<span id="liveRaised">0.00</span> • Goal: $<span id="liveGoal">10,000</span></div>
-    <div class="stats" id="liveSubsLine">Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
-    <div class="stats" id="liveStatus">Status: STOPPED</div>
+    <div style="font-size:28px;margin:10px 0">Raised: $<span id="liveRaised">0.00</span> • Goal: $<span id="liveGoal">10000</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
+    <div class="status" id="status">STOPPED</div>
   </div>
 
   <div class="grid">
     <div class="card">
       <h2>Timer Control</h2>
-      <input type="text" id="startingTime" placeholder="Enter hours:minutes (e.g., 3:00)">
-      <button class="success" onclick="setStartingTime()">Set Timer</button>
-      <button id="pauseBtn" onclick="togglePause()">PAUSE</button>
-      <button class="danger" onclick="resetAll()">RESET ALL DATA</button>
+      <input type="number" id="startHours" placeholder="Hours" style="margin-bottom:10px">
+      <input type="number" id="startMinutes" placeholder="Minutes">
+      <button class="success" style="padding:20px;font-size:20px;margin-top:10px" onclick="startTimerFromInput()">START TIMER</button>
+      <button id="pauseBtn" style="margin:15px 0;padding:16px;font-size:18px" onclick="togglePause()">PAUSE</button>
+      <button class="danger" onclick="if(confirm('Reset EVERYTHING?')) resetAll()">RESET ALL DATA</button>
     </div>
 
     <div class="card">
@@ -72,73 +75,110 @@ footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
     </div>
 
     <div class="card">
-      <h2>Overlay Customization</h2>
-      <label>Total Goal ($)</label>
-      <input type="number" id="dashboardGoal" value="10000">
-      <button onclick="updateGoal()">Save Goal</button>
+      <h2>Appearance</h2>
+      <input id="streamerName" placeholder="Streamer name">
+      <button style="margin-top:8px" onclick="updateName()">Update Name</button>
+      <label style="margin-top:20px">Goal Box Scale: <strong><span id="scaleValue">100</span>%</strong></label>
+      <input type="range" min="50" max="200" value="100" id="goalScale" oninput="document.getElementById('scaleValue').textContent=this.value">
+      <button onclick="saveGoalScale()">Apply Scale</button>
+      <label style="margin-top:15px">Total Goal:</label>
+      <input type="number" id="totalGoalInput" value="10000">
+      <button onclick="saveTotalGoal()">Update Goal</button>
     </div>
   </div>
-  <footer>Ceres Donothon Timer • 2025</footer>
+
+  <div class="card" style="margin-top:30px">
+    <h2>Milestones</h2>
+    <div id="goalList"></div>
+    <div style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap">
+      <input placeholder="Amount $" id="newAmt" style="width:150px">
+      <input placeholder="Description" id="newDesc" style="flex:1">
+      <button onclick="addGoal()">+ Add Milestone</button>
+    </div>
+  </div>
+
+  <footer>Ceres Donothon Timer • Professional Edition • 2025</footer>
 </div>
 
 <script>
-const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
-const PASSWORDS = ['Rin125','125','Rinmod125'];
+const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
+const PASSWORDS=['Rin125','125','Rinmod125'];
 firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
-const db = firebase.database().ref(PATH);
+const ref=firebase.database().ref(PATH);
 
-// Login
-document.getElementById('pw').addEventListener('keypress', e=>e.key==='Enter' && login());
-function login(){if(PASSWORDS.includes(document.getElementById('pw').value.trim())){document.getElementById('loginScreen').style.display='none';document.getElementById('main').style.display='block'; initDashboard();} else alert('Wrong password');}
-
-// Dashboard live update
 let cache = {};
-function initDashboard(){
-  db.on('value', s=>{ cache = s.val()||{}; updateDashboard(); });
-  setInterval(updateDashboard, 200); // smooth live timer
+const celebrated = new Set(JSON.parse(localStorage.getItem('donothon_celebrated_2025')||'[]'));
+
+function login(){
+  if(PASSWORDS.includes(document.getElementById('pw').value.trim())){
+    document.getElementById('loginScreen').style.display='none';
+    document.getElementById('main').style.display='block';
+    initDashboard();
+  } else alert('Wrong password');
 }
 
-function updateDashboard(){
-  const d = cache;
-  const cfg = d.config||{};
-  const earned = Number(d.totalEarned||0);
+function initDashboard(){
+  ref.on('value',s=>{cache=s.val()||{};updateLive()});
+  ref.child('settings/streamerName').on('value',s=>document.getElementById('liveName').textContent=s.val()||'Ceres');
+  ref.child('config/milestones').on('value',renderGoals);
+}
 
-  // Timer calculation
+function startTimerFromInput(){
+  const h=+document.getElementById('startHours').value||0;
+  const m=+document.getElementById('startMinutes').value||0;
+  const ms=(h*3600+m*60)*1000;
+  if(ms>0) ref.update({endTime:Date.now()+ms,paused:false,pausedAt:null,bonusSeconds:0});
+}
+
+function togglePause(){
+  ref.once('value').then(snap=>{
+    const d=snap.val()||{};
+    if(d.paused){
+      const remaining=d.pausedAt-Date.now();
+      ref.update({endTime:Date.now()+Math.max(0,remaining),paused:false,pausedAt:null});
+    }else{
+      const currentRemaining=d.endTime-Date.now();
+      ref.update({paused:true,pausedAt:Date.now()+currentRemaining,endTime:null});
+    }
+  });
+}
+
+function updateLive(){
+  const d=cache||{};
   let left=0;
-  if(d.endTime || d.pausedAt){
-    const bonus=(d.bonusSeconds||0)*1000;
-    const base = d.paused && d.pausedAt ? d.pausedAt : d.endTime;
-    left = Math.max(0, Math.floor((base + bonus - Date.now())/1000));
+  if(d.endTime||d.pausedAt){
+    const base=d.paused&&d.pausedAt?d.pausedAt:d.endTime;
+    left=Math.max(0,(base+(d.bonusSeconds||0)*1000-Date.now())/1000);
   }
   const h=('0'+Math.floor(left/3600)).slice(-2);
   const m=('0'+Math.floor(left%3600/60)).slice(-2);
-  const s=('0'+left%60).slice(-2);
+  const s=('0'+Math.floor(left%60)).slice(-2);
   document.getElementById('liveTimer').textContent=`${h}:${m}:${s}`;
-  document.getElementById('liveTimer').style.color=d.paused?'#ff5555':'#00ffaa';
-
-  document.getElementById('liveRaised').textContent=earned.toFixed(2);
-  document.getElementById('liveGoal').textContent=(cfg.goal||10000).toLocaleString();
+  document.getElementById('liveRaised').textContent=(d.totalEarned||0).toFixed(2);
+  document.getElementById('liveGoal').textContent=(d.config?.goal||10000).toLocaleString();
   document.getElementById('liveSubs').textContent=d.subsCount||0;
   document.getElementById('liveBits').textContent=d.bitsCount||0;
-  document.getElementById('liveStatus').textContent=d.paused?'Status: PAUSED':(d.endTime?'Status: LIVE':'Status: STOPPED');
+  document.getElementById('pauseBtn').textContent=d.paused?'RESUME':'PAUSE';
+  document.getElementById('status').textContent=d.paused?'PAUSED':(d.endTime?'LIVE':'STOPPED');
 }
 
-// Timer buttons
-function setStartingTime(){
-  const val=document.getElementById('startingTime').value.trim();
-  if(!val.includes(':')) return alert('Format should be H:MM or HH:MM');
-  const [h,m]=val.split(':').map(Number);
-  if(isNaN(h)||isNaN(m)) return alert('Invalid numbers');
-  const ms=(h*60+m)*60*1000;
-  db.update({endTime:Date.now()+ms,bonusSeconds:0,paused:false,pausedAt:null});
+function addMoneyAndTime(){
+  const m=+document.getElementById('addMoney').value||0;
+  const t=+document.getElementById('addMinutes').value||0;
+  if(m||t) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+t*60;return x;});
+  document.getElementById('addMoney').value='';
+  document.getElementById('addMinutes').value='';
 }
-function startTimer(){db.update({endTime:Date.now()+10800000,bonusSeconds:0,paused:false,pausedAt:null});}
-function togglePause(){db.once('value').then(snap=>{const d=snap.val()||{}; if(d.paused){const bonus=(d.bonusSeconds||0)*1000; const remaining=d.pausedAt+bonus-Date.now(); db.update({endTime:Date.now()+Math.max(0,remaining),paused:false,pausedAt:null});} else {const bonus=(d.bonusSeconds||0)*1000; const frozenAt=Date.now()+((d.endTime||0)+bonus-Date.now()); db.update({paused:true,pausedAt:frozenAt,endTime:null});}});}
-function addMoneyAndTime(){const m=+document.getElementById('addMoney').value||0; const t=+document.getElementById('addMinutes').value||0;if(m||t) db.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+t*60;return x;}); document.getElementById('addMoney').value=''; document.getElementById('addMinutes').value='';}
-function addMoneyOnly(){const m=+document.getElementById('addMoney').value||0;if(m) db.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+m*60;return x;}); document.getElementById('addMoney').value='';}
-function addTimeOnly(){const t=+document.getElementById('addMinutes').value||0;if(t) db.child('bonusSeconds').transaction(v=>(v||0)+t*60); document.getElementById('addMinutes').value='';}
-function resetAll(){if(confirm('This deletes EVERYTHING. Are you sure?')) db.set({config:{milestones:{},goal:10000},settings:{},theme:{},totalEarned:0,bonusSeconds:0,endTime:null,paused:false,pausedAt:null,subsCount:0,bitsCount:0});}
-function updateGoal(){const val=+document.getElementById('dashboardGoal').value;if(val>0) db.child('config/goal').set(val);}
+function addMoneyOnly(){const m=+document.getElementById('addMoney').value||0;if(m) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+m*60;return x;});document.getElementById('addMoney').value='';}
+function addTimeOnly(){const t=+document.getElementById('addMinutes').value||0;if(t) ref.child('bonusSeconds').transaction(v=>(v||0)+t*60);document.getElementById('addMinutes').value='';}
+function updateName(){ref.child('settings/streamerName').set(document.getElementById('streamerName').value.trim()||'Ceres');}
+function saveGoalScale(){ref.child('theme/goalScale').set(document.getElementById('goalScale').value/100);}
+function saveTotalGoal(){ref.child('config/goal').set(+document.getElementById('totalGoalInput').value||10000);}
+function addGoal(){const a=+document.getElementById('newAmt').value;const desc=document.getElementById('newDesc').value.trim();if(a&&desc) ref.child('config/milestones').push({amount:a,description:desc});document.getElementById('newAmt').value='';document.getElementById('newDesc').value='';}
+function renderGoals(s){const g=s.val()||{};const l=document.getElementById('goalList');l.innerHTML='';Object.entries(g).sort((a,b)=>a[1].amount-b[1].amount).forEach(([id,x])=>{l.innerHTML+=`<div class="goal-item"><span>$${x.amount}</span><input value="${x.description}" onchange="ref.child('config/milestones/${id}/description').set(this.value)"><button style="background:#e91e63;color:white" onclick="ref.child('config/milestones/${id}').remove()">Delete</button></div>`;});}
+function resetAll(){if(confirm('This deletes EVERYTHING. Are you sure?')) ref.set({config:{milestones:{},goal:10000},settings:{},theme:{},totalEarned:0,bonusSeconds:0,endTime:null,paused:false,pausedAt:null,subsCount:0,bitsCount:0});}
+
+setInterval(updateLive,200);
 </script>
 </body>
 </html>

@@ -9,35 +9,43 @@
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 
 <style>
-  html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center}
+  html,body{
+    margin:0;padding:0;height:100%;width:100%;overflow:hidden;
+    background:transparent;display:flex;align-items:center;justify-content:center;
+    /* This is the magic: force everything to fit perfectly */
+    font-size:1.7vw; /* Base responsive unit */
+  }
   :root{
     --accent:#a855f7;--bg:rgba(8,8,28,0.96);--text:#ffffff;--grad1:#a855f7;--grad2:#00e5ff;--check:#00ffaa;
-    --timer:16vw;--stats:5.5vw;--goal:4.8vw;--bar:7.8vw;--pad:6vw;--space:4vw;--radius:4.5vw;--glow:10vw;
-    --goal-scale:1;--font-timer:'Orbitron',sans-serif;--font-main:'Exo 2',sans-serif
+    --timer:9em;--stats:3.2em;--goal:2.8em;--bar:4.5em;--pad:4em;--space:2.5em;--radius:3em;--glow:6em;
+    --goal-scale:1;
   }
   .overlay{
-    background:var(--bg);padding:var(--pad);border-radius:var(--radius);border:0.45vw solid var(--accent);
-    box-shadow:0 0 var(--glow) var(--accent),inset 0 0 6vw rgba(168,85,247,0.2);
-    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);text-align:center;max-width:94%
+    background:var(--bg);padding:var(--pad);border-radius:var(--radius);
+    border:0.35em solid var(--accent);box-shadow:0 0 var(--glow) var(--accent),inset 0 0 4em rgba(168,85,247,0.2);
+    backdrop-filter:blur(1em);-webkit-backdrop-filter:blur(1em);text-align:center;
+    max-width:95%;max-height:95%;width:auto;height:auto;
+    transform:scale(var(--goal-scale));
   }
-  #timer{font-family:var(--font-timer);font-size:var(--timer);font-weight:900;letter-spacing:0.8vw;color:var(--text);text-shadow:0 0 5vw #000;margin:0 0 2vw 0;transition:all .7s}
-  #timer.paused{color:#ff5555 !important;text-shadow:0 0 7vw #f00 !important}
-  #timer.bonus{color:#00ffaa !important;text-shadow:0 0 8vw #0f0 !important}
+  #timer{font-family:'Orbitron',sans-serif;font-size:var(--timer);font-weight:900;letter-spacing:0.08em;color:var(--text);text-shadow:0 0 0.5em #000;margin:0 0 1em 0}
+  #timer.paused{color:#ff5555 !important;text-shadow:0 0 1em #f00 !important}
+  #timer.bonus{color:#00ffaa !important;text-shadow:0 0 1.2em #0f0 !important}
   #timer.goal-flash{animation:goalFlash 1.2s ease-out}
-  @keyframes goalFlash{0%,100%{text-shadow:0 0 5vw #000}50%{text-shadow:0 0 12vw #0f0,0 0 20vw #0f0;color:#00ffaa;transform:scale(1.15)}}
-  .stats{font-family:var(--font-main);font-size:var(--stats);margin:1.4vw 0;color:var(--text);font-weight:600;opacity:0.95}
-  #goals{margin:var(--space) 0;transform:scale(var(--goal-scale));transform-origin:center;transition:transform 0.6s ease}
-  .goal{background:rgba(30,30,70,0.75);border-radius:3vw;padding:2.5vw;margin:3.5vw 0;border:0.4vw solid #333;overflow:hidden;position:relative;transition:all 1.3s;backdrop-filter:blur(4px)}
-  .goal.complete{border-color:var(--check);box-shadow:0 0 6vw #00ffaa80;background:rgba(0,70,50,0.8);animation:goalComplete 1.5s ease-out}
-  @keyframes goalComplete{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
-  .goal-text{font-family:var(--font-main);font-size:var(--goal);font-weight:700;margin-bottom:1.3vw;color:var(--text)}
-  .bar{height:var(--bar);background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:2vw;transition:width 2.2s ease}
-  .checkmark{position:absolute;right:4vw;top:50%;transform:translateY(-50%);font-size:14vw;color:var(--check);opacity:0;animation:checkmarkAppear 1.2s 0.6s forwards}
+  @keyframes goalFlash{0%,100%{text-shadow:0 0 0.5em #000}50%{text-shadow:0 0 2em #0f0,0 0 3em #0f0;color:#00ffaa;transform:scale(1.15)}}
+  .stats{font-family:'Exo 2',sans-serif;font-size:var(--stats);margin:0.8em 0;color:var(--text);font-weight:600}
+  #goals{margin:var(--space) 0}
+  .goal{background:rgba(30,30,70,0.75);border-radius:2em;padding:1.8em;margin:2em 0;border:0.3em solid #333;overflow:hidden;position:relative;transition:all 1.3s}
+  .goal.complete{border-color:var(--check);box-shadow:0 0 1.5em #00ffaa80;background:rgba(0,70,50,0.8);animation:goalComplete 1.5s ease-out}
+  @keyframes goalComplete{0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)}}
+  .goal-text{font-size:var(--goal);font-weight:700;margin-bottom:0.8em;color:var(--text)}
+  .bar{height:var(--bar);background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:1.5em;transition:width 2.2s ease}
+  .checkmark{position:absolute;right:3em;top:50%;transform:translateY(-50%);font-size:9em;color:var(--check);opacity:0;animation:checkmarkAppear 1.2s 0.6s forwards}
   @keyframes checkmarkAppear{0%{opacity:0;transform:translateY(-50%) scale(0.3) rotate(-45deg)}70%{opacity:1;transform:translateY(-50%) scale(1.3) rotate(10deg)}100%{opacity:1;transform:translateY(-50%) scale(1)}}
-  .branding{margin-top:5vw;font-family:var(--font-main);font-size:3.6vw;color:#999;font-weight:500;letter-spacing:0.3vw}
+  .branding{margin-top:3em;font-size:2.2em;color:#999;font-weight:500}
 </style>
 </head>
 <body>
+
 <div class="overlay">
   <div id="timer">03:00:00</div>
   <div class="stats">Raised: $<span id="raised">0.00</span> • Goal: $<span id="goal">10,000</span></div>
@@ -55,7 +63,7 @@ const db = firebase.database().ref(PATH);
 let earned = 0;
 const completed = new Set();
 
-// Theme + Settings + Goal Scale
+// Theme + scaling
 db.child('theme').on('value', s => {
   const t = s.val() || {};
   Object.entries(t).forEach(([k,v]) => v && document.documentElement.style.setProperty('--'+k, v));
@@ -66,14 +74,13 @@ db.child('settings').on('value', s => {
   document.getElementById('branding').textContent = st.streamerName || 'Donothon Timer by Ceres';
 });
 
-// Ultra-smooth update every 500ms
 function update() {
   db.once('value').then(s => {
     const d = s.val() || {};
     const c = d.config || {};
     const newEarned = Number(d.totalEarned) || 0;
 
-    // Flash timer green + confetti on new goal
+    // Goal flash + confetti
     const goals = Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
     const newGoal = goals.find(g => earned < g.amount && newEarned >= g.amount);
     if (newGoal) {
@@ -88,8 +95,11 @@ function update() {
     const bonus = Number(d.bonusSeconds) || 0;
     const paused = !!d.paused;
     const now = Date.now();
-    let left = paused && d.pausedAt ? Math.floor((d.pausedAt + bonus*1000 - now)/1000) : Math.floor((baseEnd + bonus*1000 - now)/1000);
+    let left = paused && d.pausedAt 
+      ? Math.floor((d.pausedAt + bonus*1000 - now)/1000)
+      : Math.floor((baseEnd + bonus*1000 - now)/1000);
     left = Math.max(0, left);
+
     const h = String(Math.floor(left/3600)).padStart(2,'0');
     const m = String(Math.floor(left%3600/60)).padStart(2,'0');
     const sec = String(left%60).padStart(2,'0');

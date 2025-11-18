@@ -1,65 +1,70 @@
 <!DOCTYPE html>
-<html lang="en"><head>
+<html lang="en">
+<head>
 <meta charset="UTF-8">
-<title>Ceres Donothon — FINAL STUNNING OVERLAY</title>
+<title>Ceres Donothon Overlay</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;800&family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --border:#a855f7;--bg:rgba(8,8,32,0.92);--text:#e8f0ff;
-    --grad1:#a855f7;--grad2:#00e5ff;--glow:#00ffaa;--scale:1;
-  }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;width:100%;background:transparent;overflow:hidden}
-  .overlay{
-    position:fixed;bottom:32px;right:32px;
-    background:var(--bg);backdrop-filter:blur(20px);
-    border:4px solid var(--border);border-radius:32px;
-    padding:36px 48px;box-shadow:0 0 60px var(--border),inset 0 0 40px rgba(168,85,247,.15);
-    transform:scale(var(--scale));transform-origin:bottom right;
-    min-width:420px;max-width:90vw;font-family:'Exo 2',sans-serif;color:var(--text);
-    background:linear-gradient(135deg,rgba(20,19,43,.98),rgba(10,10,40,.95));
-  }
-  #timer{
-    font:900 7.8em 'Orbitron',monospace;letter-spacing:6px;margin-bottom:12px;
-    background:linear-gradient(90deg,var(--grad1),var(--grad2));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    text-shadow:0 0 30px var(--glow);
-    animation:float 6s ease-in-out infinite;
-  }
-  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
-  .raised{font:800 2.6em 'Exo 2';margin:16px 0;
-    background:linear-gradient(90deg,#fff,var(--glow));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-  }
-  .goal{margin:28px 0 0;padding:20px 24px;background:rgba(30,30,90,.5);border-radius:20px;
-    border:2px solid transparent;position:relative;overflow:hidden;transition:all .6s;
-  }
-  .goal::before{content:'';position:absolute;inset:0;
-    background:linear-gradient(90deg,var(--grad1),var(--grad2));
-    opacity:0;transition:opacity .6s;border-radius:20px;
-  }
-  .goal.hit::before{opacity:.3}
-  .goal-text{font:800 1.8em 'Exo 2';margin-bottom:10px;position:relative;z-index:2;text-shadow:0 0 20px #000}
-  .bar-bg{height:20px;background:#111;border-radius:12px;overflow:hidden;box-shadow:inset 0 4px 10px #0004}
-  .bar{height:100%;width:0%;background:linear-gradient(90deg,var(--grad1),var(--grad2));
-    border-radius:12px;transition:width 1.8s cubic-bezier(0.22,1,0.36,1);box-shadow:0 0 20px var(--glow)}
-  .check{position:absolute;right:20px;top:50%;transform:translateY(-50%);
-    font-size:5em;color:var(--glow);opacity:0}
-  .hit .check{animation:pop 1.4s forwards}
-  @keyframes pop{
-    0%{opacity:0;transform:translateY(-50%) scale(0) rotate(-180deg)}
-    60%{opacity:1;transform:translateY(-50%) scale(1.4)}
-    100%{opacity:1;transform:translateY(-50%) scale(1)}
-  }
-  .hit{border:2px solid var(--glow)!important;box-shadow:0 0 40px var(--glow)!important}
-  .sparkle{position:absolute;inset:-50%;background:radial-gradient(circle,rgba(255,255,255,.5) 0%,transparent 70%);
-    opacity:0;animation:sparkle 2s forwards}
-  @keyframes sparkle{0%,100%{opacity:0}50%{opacity:.7}}
+:root {
+  --border:#a855f7; --bg:rgba(8,8,32,0.92); --text:#e8f0ff;
+  --grad1:#a855f7; --grad2:#00e5ff; --glow:#00ffaa; --scale:1;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;background:transparent;overflow:hidden}
+.overlay{
+  position:fixed;bottom:32px;right:32px;
+  background:var(--bg);backdrop-filter:blur(20px);
+  border:4px solid var(--border);border-radius:32px;
+  padding:36px 48px;box-shadow:0 0 60px var(--border),inset 0 0 40px rgba(168,85,247,.15);
+  transform:scale(var(--scale));transform-origin:bottom right;
+  min-width:420px;max-width:90vw;font-family:'Exo 2',sans-serif;color:var(--text);
+  background:linear-gradient(135deg,rgba(20,19,43,.98),rgba(10,10,40,.95));
+}
+#timer{
+  font:900 7.8em 'Orbitron',monospace;letter-spacing:6px;margin-bottom:12px;
+  background:linear-gradient(90deg,var(--grad1),var(--grad2));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  text-shadow:0 0 30px var(--glow);
+  animation:float 6s ease-in-out infinite;
+}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.raised{
+  font:800 2.6em 'Exo 2';margin:16px 0;
+  background:linear-gradient(90deg,#fff,var(--glow));
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+}
+.goal{
+  margin:28px 0 0;padding:20px 24px;background:rgba(30,30,90,.5);border-radius:20px;
+  border:2px solid transparent;position:relative;overflow:hidden;transition:all .6s;
+}
+.goal::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(90deg,var(--grad1),var(--grad2));
+  opacity:0;transition:opacity .6s;border-radius:20px;
+}
+.goal.hit::before{opacity:.3}
+.goal-text{font:800 1.8em 'Exo 2';margin-bottom:10px;position:relative;z-index:2;text-shadow:0 0 20px #000}
+.bar-bg{height:20px;background:#111;border-radius:12px;overflow:hidden;box-shadow:inset 0 4px 10px #0004}
+.bar{height:100%;width:0%;background:linear-gradient(90deg,var(--grad1),var(--grad2));
+  border-radius:12px;transition:width 1.8s cubic-bezier(0.22,1,0.36,1);box-shadow:0 0 20px var(--glow)}
+.check{position:absolute;right:20px;top:50%;transform:translateY(-50%);
+  font-size:5em;color:var(--glow);opacity:0}
+.hit .check{animation:pop 1.4s forwards}
+@keyframes pop{
+  0%{opacity:0;transform:translateY(-50%) scale(0) rotate(-180deg)}
+  60%{opacity:1;transform:translateY(-50%) scale(1.4)}
+  100%{opacity:1;transform:translateY(-50%) scale(1)}
+}
+.hit{border:2px solid var(--glow)!important;box-shadow:0 0 40px var(--glow)!important}
+.sparkle{position:absolute;inset:-50%;background:radial-gradient(circle,rgba(255,255,255,.5) 0%,transparent 70%);
+  opacity:0;animation:sparkle 2s forwards}
+@keyframes sparkle{0%,100%{opacity:0}50%{opacity:.7}}
 </style>
-</head><body>
+</head>
+<body>
 
 <div class="overlay">
   <div id="timer">03:00:00</div>
@@ -81,69 +86,69 @@ const db = firebase.database().ref(PATH);
 const sfx = document.getElementById('sfx');
 const completed = new Set();
 
-// Live theme updates (colors + scale + sound)
+// Live theme updates
 db.child('theme').on('value', snap => {
   const t = snap.val() || {};
-  if (t.border) document.documentElement.style.setProperty('--border', t.border);
-  if (t.bg) document.documentElement.style.setProperty('--bg', t.bg);
-  if (t.text) document.documentElement.style.setProperty('--text', t.text);
-  if (t.grad1) document.documentElement.style.setProperty('--grad1', t.grad1);
-  if (t.grad2) document.documentElement.style.setProperty('--grad2', t.grad2);
-  if (t.glow) document.documentElement.style.setProperty('--glow', t.glow);
-  if (t.goalScale) document.documentElement.style.setProperty('--scale', t.goalScale);
-  if (t.sound) { sfx.src = t.sound; }
-  if (t.soundVolume !== undefined) { sfx.volume = t.soundVolume / 100; }
+  if(t.border) document.documentElement.style.setProperty('--border', t.border);
+  if(t.bg) document.documentElement.style.setProperty('--bg', t.bg);
+  if(t.text) document.documentElement.style.setProperty('--text', t.text);
+  if(t.grad1) document.documentElement.style.setProperty('--grad1', t.grad1);
+  if(t.grad2) document.documentElement.style.setProperty('--grad2', t.grad2);
+  if(t.glow) document.documentElement.style.setProperty('--glow', t.glow);
+  if(t.goalScale) document.documentElement.style.setProperty('--scale', t.goalScale);
+  if(t.sound) sfx.src = t.sound;
+  if(t.soundVolume !== undefined) sfx.volume = t.soundVolume/100;
 });
 
-// Main update loop — runs every 250ms
+// Update loop
 setInterval(() => {
   db.once('value').then(snap => {
     const d = snap.val() || {};
     const now = Date.now();
-    const bonus = (d.bonusSeconds || 0) * 1000;
-    const base = d.paused && d.pausedAt ? d.pausedAt : (d.endTime || now + 10800000);
-    const left = Math.max(0, Math.floor((base + bonus - now) / 1000));
+    const bonus = (d.bonusSeconds||0)*1000;
+    const base = d.paused && d.pausedAt ? d.pausedAt : (d.endTime||now + 10800000);
+    const left = Math.max(0, Math.floor((base + bonus - now)/1000));
 
-    const h = ('0' + Math.floor(left / 3600)).slice(-2);
-    const m = ('0' + Math.floor(left % 3600 / 60)).slice(-2);
-    const s = ('0' + left % 60).slice(-2);
+    const h = ('0'+Math.floor(left/3600)).slice(-2);
+    const m = ('0'+Math.floor(left%3600/60)).slice(-2);
+    const s = ('0'+left%60).slice(-2);
     document.getElementById('timer').textContent = `${h}:${m}:${s}`;
 
     const earned = d.totalEarned || 0;
     document.getElementById('raised').textContent = earned.toFixed(2);
 
-    renderMilestones(d.config?.milestones || {}, earned);
+    renderMilestones(d.config?.milestones||{}, earned);
   });
 }, 250);
 
-function renderMilestones(goalsObj, earned) {
+function renderMilestones(goalsObj, earned){
   const container = document.getElementById('milestones');
   container.innerHTML = '';
+  const goals = Object.values(goalsObj||{}).sort((a,b)=>a.amount-b.amount);
+  const toShow = goals.filter(g => earned < g.amount + 10000).slice(0,5);
 
-  const goals = Object.values(goalsObj || {}).sort((a, b) => a.amount - b.amount);
-  const toShow = goals.filter(g => earned < g.amount + 10000).slice(0, 3);
-
-  toShow.forEach(g => {
-    const pct = Math.min(100, (earned / g.amount) * 100);
-    const hit = earned >= g.amount;
+  toShow.forEach(g=>{
+    const pct = Math.min(100,(earned/g.amount)*100);
+    const hit = earned>=g.amount;
 
     const div = document.createElement('div');
-    div.className = `goal ${hit ? 'hit' : ''}`;
+    div.className = `goal ${hit?'hit':''}`;
     div.innerHTML = `
-      <div class="goal-text">$${g.amount.toLocaleString()} — ${g.description || 'Goal'}</div>
+      <div class="goal-text">$${g.amount.toLocaleString()} — ${g.description||'Goal'}</div>
       <div class="bar-bg"><div class="bar" style="width:${pct}%"></div></div>
-      ${hit ? '<div class="check">Checkmark</div><div class="sparkle"></div>' : ''}
+      ${hit?'<div class="check">✔</div><div class="sparkle"></div>':''}
     `;
 
-    if (hit && !completed.has(g.amount)) {
+    if(hit && !completed.has(g.amount)){
       completed.add(g.amount);
-      confetti({ particleCount: 300, spread: 120, origin: { x: 0.85, y: 0.82 } });
-      sfx.currentTime = 0;
-      sfx.play().catch(() => {});
+      confetti({particleCount:300,spread:120,origin:{x:0.85,y:0.82}});
+      sfx.currentTime=0;
+      sfx.play().catch(()=>{});
     }
 
     container.appendChild(div);
   });
 }
 </script>
-</body></html>
+</body>
+</html>

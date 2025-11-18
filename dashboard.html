@@ -2,19 +2,22 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Donothon Control Panel</title>
+<title>Donothon Control Panel – ULTIMATE</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <style>
   body{background:#0a0a1f;color:#fff;font-family:'Segoe UI',sans-serif;margin:0;padding:20px}
   .card{background:linear-gradient(135deg,#16162a,#0f0f22);padding:28px;border-radius:18px;margin:20px 0;box-shadow:0 10px 40px rgba(0,0,0,0.7);border:1px solid #333}
   h1,h2{margin:0 0 20px;color:#a855f7;font-weight:700}
-  input,button,select{padding:14px;margin:8px 0;font-size:16px;border-radius:12px;border:none;width:100%;box-sizing:border-box;background:#222;color:#fff}
+  input,button,select,textarea{padding:14px;margin:8px 0;font-size:16px;border-radius:12px;border:none;width:100%;box-sizing:border-box;background:#222;color:#fff}
   button{background:#a855f7;color:white;cursor:pointer;font-weight:bold;transition:.3s}
   button:hover{transform:translateY(-4px);box-shadow:0 12px 25px rgba(168,85,247,0.5)}
   .btn-success{background:#00c853}.btn-danger{background:#e91e63}
   .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:25px}
-  .goal-item{background:#1a1a2e;padding:16px;margin:12px 0;border-radius:12px;border-left:6px solid #a855f7}
+  .goal-item{background:#1a1a2e;padding:16px;margin:12px 0;border-radius:12px;border-left:6px solid #a855f7;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+  .small-input{width:120px!important;display:inline-block}
+  label{display:block;margin:10px 0 5px;color:#ccc}
+  .checkbox-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin:15px 0}
 </style>
 </head>
 <body>
@@ -24,45 +27,79 @@
   <input type="password" id="pw" placeholder="Password"><button onclick="login()">Enter</button>
 </div>
 
-<div id="main" style="display:none;max-width:1400px;margin:0 auto">
+<div id="main" style="display:none;max-width:1600px;margin:0 auto">
   <div class="card" style="text-align:center">
     <h1>Donothon Timer by <span id="liveName">Ceres</span></h1>
-    <h2 style="font-size:60px;color:#00ffaa" id="liveTimer">03:00:00</h2>
-    <p style="font-size:26px">Raised: $<span id="liveRaised">0.00</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></p>
+    <h2 style="font-size:72px;color:#00ffaa;margin:20px 0" id="liveTimer">03:00:00</h2>
+    <p style="font-size:28px">Raised: $<span id="liveRaised">0.00</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></p>
+    <p id="status" style="font-size:20px;color:#ff9800"></p>
   </div>
 
   <div class="grid">
-    <div class="card"><h2>Timer</h2>
-      <button class="btn-success" style="padding:20px;font-size:20px" onclick="startTimer()">START 3-HOUR TIMER</button>
-      <button id="pauseBtn" style="margin:15px 0" onclick="togglePause()">PAUSE TIMER</button>
-      <button class="btn-danger" onclick="if(confirm('Reset ALL?'))resetAll()">RESET EVERYTHING</button>
+    <!-- Timer Controls -->
+    <div class="card"><h2>Timer Control</h2>
+      <button class="btn-success" style="padding:22px;font-size:22px" onclick="startTimer()">START 3-HOUR TIMER</button>
+      <button id="pauseBtn" style="margin:15 browsing:0;padding:18px;font-size:18px" onclick="togglePause()">PAUSE TIMER</button>
+      <button class="btn-danger" onclick="if(confirm('Reset EVERYTHING? This cannot be undone!'))resetAll()">RESET EVERYTHING</button>
     </div>
+
+    <!-- Manual Add -->
     <div class="card"><h2>Manual Add</h2>
-      <input type="number" id="addMoney" placeholder="Add $"><input type="number" id="addMinutes" placeholder="Add Minutes">
-      <button onclick="addMoneyAndTime()">Add Both</button>
-      <button onclick="addMoneyOnly()">Add Money Only (+1 min/$)</button>
+      <input type="number" step="0.01" id="addMoney" placeholder="Add $ (e.g. 12.50)">
+      <input type="number" id="addMinutes" placeholder="Add Minutes">
+      <button onclick="addMoneyAndTime()">Add $ + Time</button>
+      <button onclick="addMoneyOnly()">Add $ Only (+1 min per $)</button>
       <button onclick="addTimeOnly()">Add Time Only</button>
     </div>
-    <div class="card"><h2>Name</h2>
-      <input id="streamerName" placeholder="Your name"><button onclick="ref.child('settings/streamerName').set(this.previousElementSibling.value.trim()||'Ceres')">Update</button>
+
+    <!-- Streamer Name -->
+    <div class="card"><h2>Streamer Name</h2>
+      <input id="streamerName" placeholder="Your name">
+      <button onclick="updateName()">Update Name</button>
     </div>
-    <div class="card"><h2>Goal Scale</h2>
-      <input type="range" min="50" max="200" value="100" id="goalScale"><p>Current: <span id="scaleValue">100</span>%</p>
+
+    <!-- Goal Scale -->
+    <div class="card"><h2>Goal Box Scale</h2>
+      <input type="range" min="50" max="200" value="100" id="goalScale">
+      <p style="font-size:20px">Current: <strong><span id="scaleValue">100</span>%</strong></p>
       <button onclick="saveGoalScale()">Apply Scale</button>
     </div>
   </div>
 
-  <div class="card"><h2>Goals</h2><div id="goalList"></div><hr>
-    <input placeholder="$ Amount" id="newAmt" style="width:30%"><input placeholder="Description" id="newDesc" style="width:65%"><button onclick="addGoal()">Add Goal</button>
+  <!-- Goals -->
+  <div class="card"><h2>Milestones</h2>
+    <div id="goalList"></div><hr style="border-color:#333">
+    <div style="display:flex;gap:10px">
+      <input class="small-input" placeholder="$ Amount" id="newAmt">
+      <input style="flex:1" placeholder="Description (e.g. Dance to X song)" id="newDesc">
+      <button onclick="addGoal()">Add Goal</button>
+    </div>
   </div>
 
+  <!-- Appearance & Advanced -->
   <div class="grid">
-    <div class="card"><h2>Colors</h2>
-      Accent <input type="color" id="ac" value="#a855f7" onchange="save('accent',this.value)"><br>
-      Text <input type="color" id="txt" value="#ffffff" onchange="save('text',this.value)"><br>
-      Gradient <input type="color" id="g1" value="#a855f7" onchange="save('grad1',this.value)"> → <input type="color" id="g2" value="#00e5ff" onchange="save('grad2',this.value)"><br>
-      Checkmark <input type="color" id="chk" value="#00ffaa" onchange="save('check',this.value)"><br>
-      <button onclick="saveColors()">SAVE COLORS</button>
+    <div class="card"><h2>Colors & Theme</h2>
+      <label>Accent / Border</label>
+      <input type="color" id="ac" value="#a855f7" onchange="save('accent',this.value)">
+      <label>Main Text</label>
+      <input type="color" id="txt" value="#ffffff" onchange="save('text',this.value)">
+      <label>Progress Gradient</label>
+      <input type="color" id="g1" value="#a855f7"> → <input type="color" id="g2" value="#00e5ff" onchange="save('grad1',document.getElementById('g1').value);save('grad2',this.value)">
+      <label>Checkmark / Complete</label>
+      <input type="color" id="chk" value="#00ffaa" onchange="save('check',this.value)">
+      <br><button style="margin-top:15px" onclick="saveColors()">SAVE ALL COLORS</button>
+    </div>
+
+    <div class="card"><h2>Visibility & Sound</h2>
+      <div class="checkbox-grid">
+        <label><input type="checkbox" id="hideSubs" onchange="ref.child('theme/hideSubs').set(this.checked)"> Hide Subs/Bits line</label>
+        <label><input type="checkbox" id="hideGoal" onchange="ref.child('theme/hideGoal').set(this.checked)"> Hide "Goal: $10,000" text</label>
+        <label><input type="checkbox" id="hideFooter" onchange="ref.child('theme/hideFooter').set(this.checked)"> Hide footer name</label>
+      </div>
+      <hr style="border-color:#333">
+      <label>Celebration Sound URL (leave empty = RuneScape)</label>
+      <input id="soundUrl" placeholder="https://...">
+      <button onclick="ref.child('theme/sound').set(document.getElementById('soundUrl').value.trim()||null)">Save Sound</button>
     </div>
   </div>
 </div>
@@ -70,26 +107,146 @@
 <script>
 const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 const PASSWORDS = ['Rin125','125','Rinmod125'];
-firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
+firebase.initializeApp({
+  apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
+  authDomain:"ceres-donothon-timer.firebaseapp.com",
+  databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",
+  projectId:"ceres-donothon-timer"
+});
 const ref = firebase.database().ref(PATH);
 
-function login(){if(PASSWORDS.includes(document.getElementById('pw').value.trim())){document.getElementById('main').style.display='block';document.getElementById('login').style.display='none';init();}else alert('Wrong');}
+// Login
+function login(){
+  if(PASSWORDS.includes(document.getElementById('pw').value.trim())){
+    document.getElementById('main').style.display = 'block';
+    document.getElementById('login').style.display = 'none';
+    init();
+  } else alert('Wrong password');
+}
 document.getElementById('pw').addEventListener('keypress',e=>e.key==='Enter'&&login());
 
-function init(){setInterval(updateLive,500);ref.child('settings').on('value',s=>{const st=s.val()||{};document.getElementById('liveName').textContent=st.streamerName||'Ceres';});ref.child('config/milestones').on('value',renderGoals);}
-function updateLive(){ref.once('value').then(s=>{const d=s.val()||{};const left=d.endTime?Math.max(0,Math.floor((d.endTime+(d.bonusSeconds||0)*1000-Date.now())/1000)):0;const h=String(Math.floor(left/3600)).padStart(2,'0');const m=String(Math.floor(left%3600/60)).padStart(2,'0');const sec=String(left%60).padStart(2,'0');document.getElementById('liveTimer').textContent=`${h}:${m}:${sec}`;document.getElementById('liveRaised').textContent=(d.totalEarned||0).toFixed(2);document.getElementById('liveSubs').textContent=d.subsCount||0;document.getElementById('liveBits').textContent=d.bitsCount||0;document.getElementById('pauseBtn').textContent=d.paused?'RESUME':'PAUSE';});}
+// Init
+function init(){
+  setInterval(updateLive, 500);
+  ref.on('value', snap => {
+    const d = snap.val() || {};
+    document.getElementById('status').textContent = d.paused ? '⏸ PAUSED' : d.endTime ? '▶ LIVE' : '⏹ STOPPED';
+    document.getElementById('pauseBtn').textContent = d.paused ? 'RESUME' : 'PAUSE';
+  });
+  ref.child('settings/streamerName').on('value', s => document.getElementById('liveName').textContent = s.val() || 'Ceres');
+  ref.child('config/milestones').on('value', renderGoals);
+  ref.child('theme').on('value', s => loadTheme(s.val() || {}));
+}
+
+// Live preview
+function updateLive(){
+  ref.once('value').then(s=>{
+    const d = s.val()||{};
+    const bonus = (d.bonusSeconds||0);
+    let left = 0;
+    if (d.endTime) {
+      const target = d.paused && d.pausedAt ? d.pausedAt + bonus*1000 : d.endTime + bonus*1000;
+      left = Math.max(0, Math.floor((target - Date.now())/1000));
+    }
+    const h = String(Math.floor(left/3600)).padStart(2,'0');
+    const m = String(Math.floor(left%3600/60)).padStart(2,'0');
+    const sec = String(left%60).padStart(2,'0');
+    document.getElementById('liveTimer').textContent = `${h}:${m}:${sec}`;
+    document.getElementById('liveRaised').textContent = (d.totalEarned||0).toFixed(2);
+    document.getElementById('liveSubs').textContent = d.subsCount||0;
+    document.getElementById('liveBits').textContent = d.bitsCount||0;
+  });
+}
+
+// Timer functions
 function startTimer(){ref.update({endTime:Date.now()+3*60*60*1000,bonusSeconds:0,paused:false,pausedAt:null});}
-function togglePause(){ref.once('value').then(s=>{const d=s.val()||{};if(d.paused){const rem=Math.floor((d.pausedAt+(d.bonusSeconds||0)*1000-Date.now())/1000);ref.update({endTime:Date.now()+rem*1000,paused:false,pausedAt:null});}else ref.update({paused:true,pausedAt:d.endTime||Date.now()});});}
-function addMoneyAndTime(){const m=parseFloat(document.getElementById('addMoney').value)||0;const t=parseFloat(document.getElementById('addMinutes').value)||0;if(m||t)ref.transaction(d=>{d.totalEarned=(d.totalEarned||0)+m;d.bonusSeconds=(d.bonusSeconds||0)+t*60;return d;});document.getElementById('addMoney').value='';document.getElementById('addMinutes').value='';}
-function addMoneyOnly(){const m=parseFloat(document.getElementById('addMoney').value)||0;if(m)ref.transaction(d=>{d.totalEarned=(d.totalEarned||0)+m;d.bonusSeconds=(d.bonusSeconds||0)+m*60;return d;});document.getElementById('addMoney').value='';}
-function addTimeOnly(){const t=parseFloat(document.getElementById('addMinutes').value)||0;if(t)ref.child('bonusSeconds').transaction(v=>(v||0)+t*60);document.getElementById('addMinutes').value='';}
+function togglePause(){
+  ref.once('value').then(s=>{
+    const d=s.val()||{};
+    if(d.paused){
+      const rem = Math.floor((d.pausedAt + (d.bonusSeconds||0)*1000 - Date.now())/1000);
+      ref.update({endTime:Date.now()+rem*1000,paused:false,pausedAt:null});
+    } else {
+      ref.update({paused:true,pausedAt:d.endTime||Date.now()});
+    }
+  });
+}
+
+// Money & Time
+function addMoneyAndTime(){
+  const m = parseFloat(document.getElementById('addMoney').value)||0;
+  const t = parseFloat(document.getElementById('addMinutes').value)||0;
+  if(m||t) ref.transaction(d=>{d.totalEarned=(d.totalEarned||0)+m;d.bonusSeconds=(d.bonusSeconds||0)+t*60;return d;});
+  document.getElementById('addMoney').value='';document.getElementById('addMinutes').value='';
+}
+function addMoneyOnly(){
+  const m = parseFloat(document.getElementById('addMoney').value)||0;
+  if(m) ref.transaction(d=>{d.totalEarned=(d.totalEarned||0)+m;d.bonusSeconds=(d.bonusSeconds||0)+m*60;return d;});
+  document.getElementById('addMoney').value='';
+}
+function addTimeOnly(){
+  const t = parseFloat(document.getElementById('addMinutes').value)||0;
+  if(t) ref.child('bonusSeconds').transaction(v=>(v||0)+t*60);
+  document.getElementById('addMinutes').value='';
+}
+
+// Name & Scale
+function updateName(){ref.child('settings/streamerName').set(document.getElementById('streamerName').value.trim()||'Ceres');}
 function saveGoalScale(){ref.child('theme/goalScale').set(document.getElementById('goalScale').value/100);}
 document.getElementById('goalScale').addEventListener('input',e=>document.getElementById('scaleValue').textContent=e.target.value);
-function addGoal(){const a=+document.getElementById('newAmt').value;const d=document.getElementById('newDesc').value.trim();if(a&&d)ref.child('config/milestones').push({amount:a,description:d});document.getElementById('newAmt').value='';document.getElementById('newDesc').value='';}
-function renderGoals(s){const goals=s.val()||{};const list=document.getElementById('goalList');list.innerHTML='';Object.entries(goals).sort((a,b)=>a[1].amount-b[1].amount).forEach(([id,g])=>{const div=document.createElement('div');div.className='goal-item';div.innerHTML=`$${g.amount} → <input value="${g.description}" onchange="ref.child('config/milestones/${id}/description').set(this.value)"> <button style="float:right;background:#e91e63" onclick="ref.child('config/milestones/${id}').remove()">Delete</button>`;list.appendChild(div);});}
+
+// Goals
+function addGoal(){
+  const a = +document.getElementById('newAmt').value;
+  const d = document.getElementById('newDesc').value.trim();
+  if(a && d) ref.child('config/milestones').push({amount:a,description:d});
+  document.getElementById('newAmt').value='';document.getElementById('newDesc').value='';
+}
+function renderGoals(s){
+  const goals = s.val()||{};
+  const list = document.getElementById('goalList');
+  list.innerHTML = '';
+  Object.entries(goals).sort((a,b)=>a[1].amount-b[1].amount).forEach(([id,g])=>{
+    const div = document.createElement('div');
+    div.className = 'goal-item';
+    div.innerHTML = `
+      <span>$${g.amount}</span>
+      <input value="${g.description}" onchange="ref.child('config/milestones/${id}/description').set(this.value)" style="flex:1">
+      <button style="background:#e91e63;width:auto;padding:8px 16px" onclick="ref.child('config/milestones/${id}').remove()">Delete</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+// Theme
 function save(k,v){ref.child('theme').child(k).set(v);}
-function saveColors(){save('accent',document.getElementById('ac').value);save('text',document.getElementById('txt').value);save('grad1',document.getElementById('g1').value);save('grad2',document.getElementById('g2').value);save('check',document.getElementById('chk').value);}
-function resetAll(){if(confirm('NUKE EVERYTHING?'))ref.set({config:{milestones:{}},settings:{},theme:{},totalEarned:0,bonusSeconds:0,endTime:null,paused:false});}
+function saveColors(){
+  save('accent',document.getElementById('ac').value);
+  save('text',document.getElementById('txt').value);
+  save('grad1',document.getElementById('g1').value);
+  save('grad2',document.getElementById('g2').value);
+  save('check',document.getElementById('chk').value);
+}
+function loadTheme(t){
+  if(t.goalScale) document.getElementById('goalScale').value = t.goalScale*100;
+  if(t.hideSubs) document.getElementById('hideSubs').checked = true;
+  if(t.hideGoal) document.getElementById('hideGoal').checked = true;
+  if(t.hideFooter) document.getElementById('hideFooter').checked = true;
+  document.getElementById('scaleValue').textContent = Math.round((t.goalScale||1)*100);
+}
+
+// Reset
+function resetAll(){
+  if(confirm('⚠️ This will DELETE ALL data (goals, money, timer, theme). Are you 100% sure?')){
+    ref.set({
+      config:{milestones:{},goal:10000},
+      settings:{},
+      theme:{},
+      totalEarned:0,bonusSeconds:0,endTime:null,paused:false,pausedAt:null,
+      subsCount:0,bitsCount:0
+    });
+  }
+}
 </script>
 </body>
 </html>

@@ -4,26 +4,24 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <style>
-  html,body{margin:0;padding:0;height:100%;width:100%;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.7vw;box-sizing:border-box}
+  html,body{margin:0;padding:0;height:100vh;width:100vw;background:transparent;overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:1.7vw;box-sizing:border-box}
   :root{--a:#a855f7;--b:rgba(8,8,28,.96);--t:#fff;--g1:#a855f7;--g2:#00e5ff;--c:#00ffaa;--s:1;--gh:#00ffaa;--th:#00ffaa}
-  .o{background:var(--b);padding:3.8em;border-radius:3em;border:.35em solid var(--a);box-shadow:0 0 6em var(--a),inset 0 0 4em #a855f730;backdrop-filter:blur(1em);text-align:center;max-width:96%;max-height:96%;width:auto;height:auto;transform:scale(var(--s));box-sizing:border-box;overflow:hidden}
-  #t{font:900 8.8em Orbitron,sans-serif;letter-spacing:.08em;color:var(--t);text-shadow:0 0 .5em #000;margin:0 0 .8em;line-height:1}
-  #t.p{color:#f55;text-shadow:0 0 1em #f00}#t.b{color:var(--c);text-shadow:0 0 1.2em #0f0}
+  .o{background:var(--b);padding:4em;border-radius:3em;border:.35em solid var(--a);box-shadow:0 0 6em var(--a),inset 0 0 4em #a855f730;backdrop-filter:blur(1em);text-align:center;max-width:94vw;max-height:94vh;width:auto;height:auto;transform:scale(var(--s));overflow:hidden;box-sizing:border-box}
+  #t{font:900 9em Orbitron,sans-serif;letter-spacing:.08em;color:var(--t);text-shadow:0 0 .5em #000;margin:0 0 1em;line-height:1}
+  #t.p{color:#f55;text-shadow:0 0 1em #f00}
+  #t.b{color:var(--c);text-shadow:0 0 1.2em #0f0}
   #t.f{animation:tf 1.2s}@keyframes tf{50%{text-shadow:0 0 3em var(--th),0 0 5em var(--th);color:var(--th);transform:scale(1.15)}}
-  .s{font:600 3.2em Exo 2,sans-serif;margin:.6em 0;color:var(--t);white-space:nowrap}
-  #m{margin:1.8em 0}.g{margin:1.8em 0;background:#1e1e46c0;border-radius:2em;padding:1.6em;border:.3em solid #333;position:relative;overflow:hidden}
+  .s{font:600 3.2em Exo 2,sans-serif;margin:.8em 0;color:var(--t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .g{margin:2em 0 0;background:#1e1e46c0;border-radius:2em;padding:1.8em;border:.3em solid #333;position:relative;overflow:hidden}
   .g.c{border-color:var(--c);box-shadow:0 0 1.5em var(--gh);background:#004030c0}
   .g.flash{animation:gf .25s 6}@keyframes gf{0%,100%{box-shadow:0 0 1.5em var(--gh)}50%{box-shadow:0 0 3em var(--gh),0 0 6em var(--gh);background:#008040}}
-  .gt{font:700 2.7em Exo 2,sans-serif;margin-bottom:.6em;color:var(--t)}
-  .bar{height:4.2em;background:linear-gradient(90deg,var(--g1),var(--g2));border-radius:1.5em;transition:width 2s}
-  .ck{position:absolute;right:2.2em;top:50%;transform:translateY(-50%);font-size:8.5em;color:var(--c);opacity:0;animation:k 1.2s .6s forwards;pointer-events:none}
+  .gt{font:700 2.8em Exo 2,sans-serif;margin-bottom:.8em;color:var(--t)}
+  .bar{height:4.5em;background:linear-gradient(90deg,var(--g1),var(--g2));border-radius:1.5em;transition:width 2s}
+  .ck{position:absolute;right:2.5em;top:50%;transform:translateY(-50%);font-size:9em;color:var(--c);opacity:0;animation:k 1.2s .6s forwards}
   @keyframes k{0%{opacity:0;transform:translateY(-50%) scale(.3) rotate(-45deg)}70%{opacity:1;transform:translateY(-50%) scale(1.3) rotate(10deg)}100%{opacity:1;transform:translateY(-50%) scale(1)}}
-  .br{margin-top:.8em;font:500 2.1em Exo 2,sans-serif;color:#999}
-  .hide{display:none !important}
-  /* FINAL FIXES — NO OVERFLOW EVER */
-  *{box-sizing:border-box}
-  .o,*{max-width:100% !important}
-  img,svg,canvas{pointer-events:none}
+  .br{margin-top:1em;font:500 2.2em Exo 2,sans-serif;color:#999}
+  .hide{display:none}
+  *{box-sizing:border-box;max-width:100%}
 </style></head><body>
 
 <div class="o">
@@ -42,6 +40,7 @@ firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDom
 const db=firebase.database().ref(P),snd=document.getElementById('snd');
 let earned=0,done=new Set();
 
+// Theme & visibility
 db.child('theme').on('value',s=>{const t=s.val()||{};
   ['a','b','t','g1','g2','c','gh','th'].forEach(k=>t[k]&&document.documentElement.style.setProperty('--'+k,t[k]));
   document.documentElement.style.setProperty('--s',t.goalScale||1);
@@ -53,6 +52,29 @@ db.child('theme').on('value',s=>{const t=s.val()||{};
 });
 db.child('settings/streamerName').on('value',s=>document.getElementById('n').textContent='Donothon Timer by '+(s.val()||'Ceres'));
 
+// TWITCH / STREAMLABS / STREAMELEMENTS INTEGRATION
+db.child('socketToken').on('value',snap=>{
+  if(window.currentSocket) window.currentSocket.close();
+  const token=snap.val(); if(!token) return;
+  const socket=new WebSocket(`wss://sockets.streamlabs.com?token=${token}`);
+  window.currentSocket=socket;
+  socket.onmessage=e=>{
+    const data=JSON.parse(e.data);
+    if(!data.type||!data.message?.[0]) return;
+    const msg=data.message[0];
+    let seconds=0;
+    if(data.type==='donation') seconds=msg.amount*(db.child('config/eventRewards/don').once('value').then(s=>s.val()||60));
+    if(data.type==='subscription'){
+      const tier=msg.sub_plan||'1000';
+      const key=tier==='2000'?'t2':tier==='3000'?'t3':'t1';
+      seconds=db.child('config/eventRewards/'+key).once('value').then(s=>s.val()||60);
+    }
+    if(data.type==='bits') seconds=Math.floor(msg.amount/100)*(db.child('config/eventRewards/bits').once('value').then(s=>s.val()||30));
+    if(seconds) seconds.then(sec=>db.child('bonusSeconds').transaction(v=>(v||0)+sec));
+  };
+});
+
+// Main update loop
 function update(){
   db.once('value').then(s=>{
     const d=s.val()||{},c=d.config||{},ne=+d.totalEarned||0;
@@ -65,11 +87,12 @@ function update(){
     }
     earned=ne;
 
-    const end=d.endTime||Date.now()+10800000,bonus=(d.bonusSeconds||0)*1000,p=!!d.paused,now=Date.now();
-    let left=p&&d.pausedAt?Math.floor((d.pausedAt+bonus-now)/1000):Math.floor((end+bonus-now)/1000);
-    left=Math.max(0,left);
+    const now=Date.now(),bonus=(d.bonusSeconds||0)*1000;
+    const base=d.paused&&d.pausedAt?d.pausedAt:d.endTime||now+10800000;
+    let left=Math.max(0,Math.floor((base+bonus-now)/1000));
     const h=('0'+Math.floor(left/3600)).slice(-2),m=('0'+Math.floor(left%3600/60)).slice(-2),sec=('0'+left%60).slice(-2);
-    const t=document.getElementById('t');t.textContent=`${h}:${m}:${sec}`;t.className=(bonus?'b ':'')+(p?'p':'');
+    const t=document.getElementById('t');t.textContent=`${h}:${m}:${sec}`;
+    t.className=(bonus?'b ':'')+(d.paused?'p':'');
 
     document.getElementById('r').textContent=earned.toFixed(2);
     document.getElementById('g').textContent=(c.goal||10000).toLocaleString();

@@ -3,129 +3,145 @@
 <head>
 <meta charset="UTF-8">
 <title>Ceres Donothon Overlay</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@700&family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <style>
-html, body {
-  margin: 0; padding: 0;
-  height: 100vh; width: 100vw;
-  background: transparent;
-  overflow: hidden;
-  display: flex; justify-content: center; align-items: center;
-  font-family: 'Orbitron', sans-serif;
+body{
+  margin:0; padding:0; overflow:hidden;
+  background:transparent; font-family:'JetBrains Mono', monospace; color:white;
 }
-:root {
-  --a: #a855f7; --b: rgba(8,8,28,.96); --t: #fff;
-  --g1: #a855f7; --g2: #00e5ff; --c: #00ffaa;
-  --s: 1; --gh: #00ffaa; --th: #00ffaa;
+#overlay{
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center;
 }
-.overlay-box {
-  background: var(--b);
-  padding: 3em;
-  border-radius: 3em;
-  border: .35em solid var(--a);
-  box-shadow: 0 0 6em var(--a), inset 0 0 4em #a855f730;
-  backdrop-filter: blur(1em);
-  text-align: center;
-  transform: scale(var(--s));
+#liveTimer{
+  font-size:92px; font-weight:600;
+  background:linear-gradient(90deg,#00ffaa,#00e5ff);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  text-shadow:0 0 10px rgba(0,255,170,.5);
 }
-#timer {
-  font: 900 8em Orbitron,sans-serif;
-  color: var(--t);
-  text-shadow: 0 0 .5em #000;
-  margin: 0 0 1em;
-  line-height: 1;
+#stats{
+  margin-top:10px; font-size:28px;
 }
-#raised {
-  font: 600 2.5em 'Exo 2',sans-serif;
-  margin-bottom: .5em;
+.milestone-container{
+  width:80%; margin-top:40px; display:flex; flex-direction:column; gap:12px;
 }
-.milestones { margin-top: 2em; }
-.milestone {
-  background: #1e1e46c0;
-  border-radius: 2em;
-  padding: 1em;
-  margin-bottom: 1em;
-  border: .3em solid #333;
-  position: relative;
-  overflow: hidden;
+.milestone-bar{
+  width:100%; height:28px; border-radius:14px; overflow:hidden; background:#222;
+  border:2px solid #555; position:relative;
 }
-.milestone.completed {
-  border-color: var(--c);
-  background: #004030c0;
-  box-shadow: 0 0 1.5em var(--gh);
-  animation: milestoneFlash .6s 1;
+.milestone-fill{
+  height:100%; width:0%; background:linear-gradient(90deg,#a855f7,#00e5ff);
+  transition: width 0.5s ease;
 }
-.milestone .bar {
-  height: 2em;
-  border-radius: 1em;
-  background: linear-gradient(90deg, var(--g1), var(--g2));
-  width: 0%;
-  transition: width 1s ease;
+.milestone-label{
+  position:absolute; width:100%; left:0; top:0; height:100%; display:flex;
+  justify-content:space-between; align-items:center; padding:0 12px; font-size:16px; font-weight:600;
 }
-@keyframes milestoneFlash {
-  0%,100% { box-shadow:0 0 1.5em var(--gh); }
-  50% { box-shadow:0 0 3em var(--gh), 0 0 6em var(--gh); background:#008040; }
+.confetti{
+  position:absolute; width:6px; height:6px; background:var(--accent); border-radius:50%;
+  animation:confetti-fall 1s ease-out forwards;
+}
+@keyframes confetti-fall{
+  0%{transform:translateY(0) rotate(0deg);}
+  100%{transform:translateY(100px) rotate(360deg); opacity:0;}
 }
 </style>
 </head>
 <body>
-<div class="overlay-box">
-  <div id="timer">03:00:00</div>
-  <div id="raised">Raised: $0.00</div>
-  <div class="milestones" id="milestoneContainer"></div>
+
+<div id="overlay">
+  <div id="liveTimer">03:00:00</div>
+  <div id="stats">Raised: $0.00 • Subs: 0 • Bits: 0</div>
+  <div class="milestone-container" id="milestones"></div>
 </div>
 
 <script>
-const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
+const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 firebase.initializeApp({
   apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
   authDomain:"ceres-donothon-timer.firebaseapp.com",
   databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",
   projectId:"ceres-donothon-timer"
 });
-const db = firebase.database().ref(PATH);
-let earned = 0;
-let doneMilestones = new Set();
+const ref = firebase.database().ref(PATH);
 
-function updateOverlay() {
-  db.once('value').then(snap => {
-    const data = snap.val() || {};
-    earned = data.totalEarned || 0;
-    document.getElementById('raised').textContent = `Raised: $${earned.toFixed(2)}`;
+let milestonesData={};
 
-    // Timer
-    let left = 0;
-    if (data.endTime || data.pausedAt) {
-      const bonus = (data.bonusSeconds||0)*1000;
-      const base = data.paused && data.pausedAt ? data.pausedAt : (data.endTime || Date.now()+10800000);
-      left = Math.max(0, Math.floor((base + bonus - Date.now())/1000));
-    }
-    const h = ('0'+Math.floor(left/3600)).slice(-2);
-    const m = ('0'+Math.floor(left%3600/60)).slice(-2);
-    const s = ('0'+left%60).slice(-2);
-    document.getElementById('timer').textContent = `${h}:${m}:${s}`;
+ref.on('value',snap=>{
+  const data=snap.val()||{};
+  updateTimer(data);
+  updateStats(data);
+  if(data.config?.milestones){
+    milestonesData=data.config.milestones;
+    renderMilestones(data.totalEarned||0);
+  }
+  applyColors(data.theme||{});
+});
 
-    // Milestones
-    const container = document.getElementById('milestoneContainer');
-    container.innerHTML = '';
-    const goals = Object.values(data.config?.milestones||{}).sort((a,b)=>a.amount-b.amount);
-    goals.forEach(g => {
-      const pct = Math.min(100,(earned/g.amount)*100);
-      const div = document.createElement('div');
-      div.className = 'milestone';
-      if (earned >= g.amount) { div.classList.add('completed'); if(!doneMilestones.has(g.amount)){doneMilestones.add(g.amount); confetti({particleCount:500,spread:180,origin:{y:.5}}); } }
-      div.innerHTML = `<div>${g.description || 'Goal'}: $${g.amount}</div>
-                       <div class="bar" style="width:${pct}%;"></div>`;
-      container.appendChild(div);
-    });
-  });
+function updateTimer(d){
+  let left=0;
+  if(d.endTime || d.pausedAt){
+    const bonus=(d.bonusSeconds||0)*1000;
+    const base=d.paused&&d.pausedAt?d.pausedAt:(d.endTime||0);
+    left=Math.max(0,Math.floor((base+bonus-Date.now())/1000));
+  }
+  const h=('0'+Math.floor(left/3600)).slice(-2);
+  const m=('0'+Math.floor(left%3600/60)).slice(-2);
+  const s=('0'+left%60).slice(-2);
+  document.getElementById('liveTimer').textContent=`${h}:${m}:${s}`;
 }
 
-setInterval(updateOverlay, 500);
-updateOverlay();
+function updateStats(d){
+  document.getElementById('stats').textContent=
+    `Raised: $${(d.totalEarned||0).toFixed(2)} • Subs: ${d.subsCount||0} • Bits: ${d.bitsCount||0}`;
+}
+
+function renderMilestones(total){
+  const container=document.getElementById('milestones');
+  container.innerHTML='';
+  Object.entries(milestonesData)
+    .sort((a,b)=>a[1].amount-b[1].amount)
+    .forEach(([id,m])=>{
+      const div=document.createElement('div');
+      div.className='milestone-bar';
+      const fill=document.createElement('div');
+      fill.className='milestone-fill';
+      let perc=Math.min(100,Math.floor((total/m.amount)*100));
+      fill.style.width=perc+'%';
+      if(perc>=100 && !m.completed){
+        triggerConfetti();
+        milestonesData[id].completed=true;
+      }
+      div.appendChild(fill);
+      const label=document.createElement('div');
+      label.className='milestone-label';
+      label.innerHTML=`<span>${m.description}</span><span>$${m.amount.toFixed(2)}</span>`;
+      div.appendChild(label);
+      container.appendChild(div);
+    });
+}
+
+function triggerConfetti(){
+  for(let i=0;i<20;i++){
+    const conf=document.createElement('div');
+    conf.className='confetti';
+    conf.style.left=Math.random()*80+'%';
+    conf.style.backgroundColor='hsl('+(Math.random()*360)+',100%,50%)';
+    document.body.appendChild(conf);
+    setTimeout(()=>conf.remove(),1000);
+  }
+}
+
+function applyColors(theme){
+  document.querySelectorAll('.milestone-fill').forEach(el=>{
+    el.style.background=theme.g1 && theme.g2?`linear-gradient(90deg,${theme.g1},${theme.g2})`:'#a855f7';
+  });
+  document.getElementById('liveTimer').style.color=theme.th||'#00ffaa';
+}
 </script>
 </body>
 </html>

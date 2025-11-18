@@ -57,4 +57,37 @@ function update(){
   db.once('value').then(s=>{
     const d=s.val()||{},c=d.config||{},ne=+d.totalEarned||0;
     const goals=Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
-   
+    const hit=goals.find(g=>earned<g.amount&&ne>=g.amount);
+    if(hit){
+      document.getElementById('t').classList.add('f');setTimeout(()=>document.getElementById('t').classList.remove('f'),1500);
+      if(d.theme?.confetti!==false) confetti({particleCount:1000,spread:180,origin:{y:.55}});
+      snd.currentTime=0;snd.play();
+    }
+    earned=ne;
+
+    const end=d.endTime||Date.now()+10800000,bonus=(d.bonusSeconds||0)*1000,p=!!d.paused,now=Date.now();
+    let left=p&&d.pausedAt?Math.floor((d.pausedAt+bonus-now)/1000):Math.floor((end+bonus-now)/1000);
+    left=Math.max(0,left);
+    const h=('0'+Math.floor(left/3600)).slice(-2),m=('0'+Math.floor(left%3600/60)).slice(-2),sec=('0'+left%60).slice(-2);
+    const t=document.getElementById('t');t.textContent=`${h}:${m}:${sec}`;t.className=(bonus?'b ':'')+(p?'p':'');
+
+    document.getElementById('r').textContent=earned.toFixed(2);
+    document.getElementById('g').textContent=(c.goal||10000).toLocaleString();
+    document.getElementById('s').textContent=d.subsCount||0;
+    document.getElementById('b').textContent=d.bitsCount||0;
+
+    const m=document.getElementById('m');m.innerHTML='';
+    goals.filter(g=>earned<g.amount+5000).slice(0,3).forEach(g=>{
+      const comp=earned>=g.amount,pct=Math.min(100,(earned/g.amount)*100);
+      const div=document.createElement('div');
+      div.className=`g${comp?' c':''}`;
+      if(comp && !done.has(g.amount)){done.add(g.amount);div.classList.add('flash');setTimeout(()=>div.classList.remove('flash'),1600);}
+      div.innerHTML=`<div class="gt">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div>
+        <div style="position:relative"><div class="bar" style="width:${pct}%"></div>${comp?'<div class="ck">CHECKMARK</div>':''}</div>`;
+      m.appendChild(div);
+    });
+  });
+}
+setInterval(update,500);update();
+</script>
+</body></html>

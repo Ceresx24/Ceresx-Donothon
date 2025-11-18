@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <title>Ceres Donothon Overlay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <style>
@@ -22,6 +22,10 @@ body{
   background:linear-gradient(90deg,#00ffaa,#00e5ff);
   -webkit-background-clip:text; -webkit-text-fill-color:transparent;
   text-shadow:0 0 10px rgba(0,255,170,.5);
+  transition: all 0.5s ease;
+}
+#liveTimer.glow{
+  text-shadow: 0 0 20px #00ffaa, 0 0 30px #00e5ff, 0 0 40px #00ffaa;
 }
 #stats{
   margin-top:10px; font-size:28px;
@@ -31,11 +35,19 @@ body{
 }
 .milestone-bar{
   width:100%; height:28px; border-radius:14px; overflow:hidden; background:#222;
-  border:2px solid #555; position:relative;
+  border:2px solid #555; position:relative; transition: transform 0.3s ease;
+}
+.milestone-bar.pulse{
+  transform: scaleY(1.1);
+  animation: pulse 1s infinite alternate;
+}
+@keyframes pulse{
+  0%{transform:scaleY(1);}
+  100%{transform:scaleY(1.1);}
 }
 .milestone-fill{
   height:100%; width:0%; background:linear-gradient(90deg,#a855f7,#00e5ff);
-  transition: width 0.5s ease;
+  transition: width 0.5s ease, background 0.5s ease;
 }
 .milestone-label{
   position:absolute; width:100%; left:0; top:0; height:100%; display:flex;
@@ -92,7 +104,8 @@ function updateTimer(d){
   const h=('0'+Math.floor(left/3600)).slice(-2);
   const m=('0'+Math.floor(left%3600/60)).slice(-2);
   const s=('0'+left%60).slice(-2);
-  document.getElementById('liveTimer').textContent=`${h}:${m}:${s}`;
+  const timerEl=document.getElementById('liveTimer');
+  timerEl.textContent=`${h}:${m}:${s}`;
 }
 
 function updateStats(d){
@@ -112,10 +125,19 @@ function renderMilestones(total){
       fill.className='milestone-fill';
       let perc=Math.min(100,Math.floor((total/m.amount)*100));
       fill.style.width=perc+'%';
+
+      // pulse if close to completion
+      if(perc>=80 && perc<100) div.classList.add('pulse');
+      else div.classList.remove('pulse');
+
+      // milestone complete glow
       if(perc>=100 && !m.completed){
         triggerConfetti();
+        document.getElementById('liveTimer').classList.add('glow');
+        setTimeout(()=>document.getElementById('liveTimer').classList.remove('glow'),2000);
         milestonesData[id].completed=true;
       }
+
       div.appendChild(fill);
       const label=document.createElement('div');
       label.className='milestone-label';
@@ -126,7 +148,7 @@ function renderMilestones(total){
 }
 
 function triggerConfetti(){
-  for(let i=0;i<20;i++){
+  for(let i=0;i<30;i++){
     const conf=document.createElement('div');
     conf.className='confetti';
     conf.style.left=Math.random()*80+'%';
@@ -140,7 +162,9 @@ function applyColors(theme){
   document.querySelectorAll('.milestone-fill').forEach(el=>{
     el.style.background=theme.g1 && theme.g2?`linear-gradient(90deg,${theme.g1},${theme.g2})`:'#a855f7';
   });
-  document.getElementById('liveTimer').style.color=theme.th||'#00ffaa';
+  const timerEl=document.getElementById('liveTimer');
+  timerEl.style.color=theme.th||'#00ffaa';
+  timerEl.style.textShadow=`0 0 10px ${theme.th||'#00ffaa'}`;
 }
 </script>
 </body>

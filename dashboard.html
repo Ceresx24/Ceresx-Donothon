@@ -168,12 +168,26 @@ function togglePause() {
     const d = snap.val() || {};
     const now = Date.now();
     const bonus = (d.bonusSeconds || 0) * 1000;
+
     if (d.paused) {
-      const frozen = d.pausedAt;
-      ref.update({ endTime: frozen + bonus, paused: false, pausedAt: null });
+      // ——— RESUMING FROM PAUSE ———
+      const frozenMoment = d.pausedAt;                    // This is the exact future timestamp we froze at
+      ref.update({
+        endTime: frozenMoment + bonus,
+        paused: false,
+        pausedAt: null
+      });
     } else {
-      const end = d.endTime || (now + 10800000);
-      ref.update({ paused: true, pausedAt: end + bonus, endTime: null });
+      // ——— PAUSING THE TIMER ———
+      // If timer is running → calculate exact moment it should resume from
+      const currentEndTime = d.endTime || (now + 10800000); // fallback 3h if somehow missing
+      const frozenMoment = currentEndTime + bonus;
+
+      ref.update({
+        paused: true,
+        pausedAt: frozenMoment,
+        endTime: null
+      });
     }
   });
 }

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Ceres Donothon — EPIC FINAL</title>
+<title>Ceres Donothon — FINAL</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
@@ -11,56 +11,35 @@
 <style>
   html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center;font-size:62.5%}
   :root{
-    --bg:rgba(8,8,28,0.96);--accent:#a855f7;--text:#fff;--timer:#fff;
-    --timer-bonus:#00ffaa;--timer-paused:#ff5555;--grad1:#a855f7;--grad2:#00e5ff;
-    --goal-complete:#00ffaa;--scale:1;
-    --goal-hit-color:#00ffaa;--timer-hit-color:#00ffaa;
+    --bg:rgba(8,8,28,0.96);--accent:#a855f7;--text:#fff;--timer:#fff;--timer-bonus:#00ffaa;--timer-paused:#ff5555;
+    --grad1:#a855f7;--grad2:#00e5ff;--goal-complete:#00ffaa;--scale:1;--goal-hit:#00ffaa;--timer-hit:#00ffaa;
   }
   .o{background:var(--bg);padding:5rem 6rem;border-radius:3.5rem;border:0.5rem solid var(--accent);
      box-shadow:0 0 8rem var(--accent),inset 0 0 5rem #a855f740;backdrop-filter:blur(12px);
      text-align:center;max-width:96%;transform:scale(var(--scale))}
-  
-  #timer{font:900 28rem 'Orbitron',sans-serif;color:var(--timer);letter-spacing:.05em;
-         text-shadow:0 0 2rem #000;margin:0 0 2rem;line-height:1;transition:all .6s}
-  #timer.paused{color:var(--timer-paused);text-shadow:0 0 3rem #f008}
+  #timer{font:900 28rem 'Orbitron',sans-serif;color:var(--timer);letter-spacing:.05em;text-shadow:0 0 2rem #000;margin:0 0 2rem;line-height:1}
+  #timer.paused{color:var(--timer-paused);text-shadow:0 0 3rem #f008;animation:pulse 2s infinite}
   #timer.bonus{color:var(--timer-bonus);text-shadow:0 0 4rem #0f08}
   #timer.hit{animation:timerHit 1.8s forwards}
-
+  @keyframes timerHit{0%{transform:scale(1)}20%{transform:scale(1.25);text-shadow:0 0 12rem var(--timer-hit),0 0 24rem var(--timer-hit)}100%{transform:scale(1)}}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.7}}
   .stats{font:700 7rem 'Exo 2',sans-serif;color:var(--text);margin:1.5rem 0}
   .stats span{color:var(--accent)}
-
-  .goal{margin:3rem 0;background:#1e1e46c0;border-radius:2.5rem;padding:3rem;
-        border:0.4rem solid #333;position:relative;overflow:hidden;transition:all .6s}
+  .goal{margin:3rem 0;background:#1e1e46c0;border-radius:2.5rem;padding:3rem;border:0.4rem solid #333;position:relative;overflow:hidden}
   .goal.complete{border-color:var(--goal-complete);background:#004030e0;box-shadow:0 0 3rem #00ffaa60}
   .goal.hit{animation:goalHit 2s forwards}
-
-  @keyframes goalHit{
-    0%{transform:scale(1) rotate(0);box-shadow:0 0 3rem #00ffaa60}
-    15%{transform:scale(1.15) rotate(3deg);box-shadow:0 0 8rem var(--goal-hit-color),0 0 12rem var(--goal-hit-color)}
-    100%{transform:scale(1) rotate(0);box-shadow:0 0 5rem var(--goal-hit-color)}
-  }
-  @keyframes timerHit{
-    0%{transform:scale(1);text-shadow:0 0 4rem #0f08}
-    20%{transform:scale(1.2);text-shadow:0 0 10rem var(--timer-hit-color),0 0 20rem var(--timer-hit-color)}
-    100%{transform:scale(1);text-shadow:0 0 6rem var(--timer-hit-color)}
-  }
-
+  @keyframes goalHit{0%{transform:scale(1)}15%{transform:scale(1.18) rotate(4deg);box-shadow:0 0 10rem var(--goal-hit),0 0 16rem var(--goal-hit)}100%{transform:scale(1)}}
   .goal-title{font:700 7.5rem 'Exo 2',sans-serif;color:var(--text);margin-bottom:1.5rem}
-  .bar-wrap{height:10rem;background:#0006;border-radius:2rem;overflow:hidden;position:relative}
-  .bar{height:100%;width:0;background:linear-gradient(90deg,var(--grad1),var(--grad2));
-       border-radius:2rem;transition:width 2.2s cubic-bezier(.2,.8,.4,1)}
-  .checkmark{position:absolute;right:4rem;top:50%;transform:translateY(-50%) scale(0) rotate(-45deg);
-             font-size:18rem;color:var(--goal-complete);opacity:0}
+  .bar-wrap{height:10rem;background:#0006;border-radius:2rem;overflow:hidden}
+  .bar{height:100%;width:0;background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:2rem;transition:width 2.2s cubic-bezier(.2,.8,.4,1)}
+  .checkmark{position:absolute;right:4rem;top:50%;transform:translateY(-50%) scale(0) rotate(-45deg);font-size:18rem;color:var(--goal-complete);opacity:0}
   .goal.complete .checkmark{animation:check 1.2s .6s forwards}
-  @keyframes check{0%{opacity:0;transform:translateY(-50%) scale(.3) rotate(-45deg)}
-                   70%{opacity:1;transform:translateY(-50%) scale(1.3) rotate(10deg)}
-                   100%{opacity:1;transform:translateY(-50%) scale(1) rotate(0)}}
+  @keyframes check{0%{opacity:0;transform:translateY(-50%) scale(.3) rotate(-45deg)}70%{opacity:1;transform:translateY(-50%) scale(1.3) rotate(10deg)}100%{opacity:1;transform:translateY(-50%) scale(1) rotate(0)}}
   .footer{font:600 5rem 'Exo 2',sans-serif;color:#ccc;margin-top:3rem}
   .hide{display:none}
 </style>
 </head>
 <body>
-
 <div class="o">
   <div id="timer">03:00:00</div>
   <div class="stats">Raised: $<span id="raised">0.00</span> • Goal: $<span id="totalGoal">10,000</span></div>
@@ -68,46 +47,37 @@
   <div id="goals"></div>
   <div class="footer" id="footerName">Donothon Timer by Ceres</div>
 </div>
-
 <audio id="sound" preload="auto"></audio>
 
 <script>
 const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
-firebase.initializeApp({
-  apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
-  authDomain:"ceres-donothon-timer.firebaseapp.com",
-  databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",
-  projectId:"ceres-donothon-timer"
-});
+firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
 const db = firebase.database().ref(PATH);
 const sound = document.getElementById('sound');
-const celebrated = new Set(JSON.parse(localStorage.getItem('donothon-hits')||'[]'));
-let cache = {}, lastEarned = 0;
+const celebrated = new Set(JSON.parse(localStorage.getItem('donothon_celebrated_final')||'[]'));
+let cache = {};
 
 db.on('value', s => { cache = s.val()||{}; update(); });
-
 db.child('theme').on('value', s => {
   const t = s.val()||{};
   Object.entries(t).forEach(([k,v])=>v!==null&&document.documentElement.style.setProperty('--'+k,v));
   sound.src = t.sound || "https://static.wikia.nocookie.net/runescape/images/4/4f/Level_up.ogg/revision/latest";
-  document.documentElement.style.setProperty('--goal-hit-color', t.goalHitColor || '#00ffaa');
-  document.documentElement.style.setProperty('--timer-hit-color', t.timerHitColor || '#00ffaa');
+  sound.volume = (t.soundVolume||100)/100;
+  document.documentElement.style.setProperty('--goal-hit', t.goalHitColor || '#00ffaa');
+  document.documentElement.style.setProperty('--timer-hit', t.timerHitColor || '#00ffaa');
   document.getElementById('subsLine').classList.toggle('hide', !!t.hideSubs);
   document.getElementById('totalGoal').parentElement.classList.toggle('hide', !!t.hideGoal);
   document.getElementById('footerName').classList.toggle('hide', !!t.hideFooter);
 });
-
-db.child('settings/streamerName').on('value', s => {
-  document.getElementById('footerName').textContent = s.val() || 'Donothon Timer by Ceres';
-});
+db.child('settings/streamerName').on('value', s => document.getElementById('footerName').textContent = s.val() || 'Donothon Timer by Ceres');
 
 function update(){
   const d = cache;
   const cfg = d.config || {};
-  const earned = +(d.totalEarned||0);
+  const earned = Number(d.totalEarned||0);
   const goals = Object.values(cfg.milestones||{}).sort((a,b)=>a.amount-b.amount);
 
-  // TIMER — NOW PAUSES CORRECTLY
+  // Perfect timer logic
   let left = 0;
   if(d.endTime){
     const bonus = (d.bonusSeconds||0)*1000;
@@ -128,37 +98,28 @@ function update(){
 
   const container = document.getElementById('goals');
   container.innerHTML = '';
-  goals.filter(g=>earned < g.amount+5000).slice(0,3).forEach(g => {
+  goals.filter(g=>earned < g.amount+5000).slice(0,3).forEach(g=>{
     const complete = earned >= g.amount;
     const pct = complete?100:(earned/g.amount)*100;
     const div = document.createElement('div');
-    div.className = `goal${complete?' complete':''}${complete && !celebrated.has(g.amount)?' hit':''}`;
-    
+    div.className = `goal${complete?' complete':''}`;
     if(complete && !celebrated.has(g.amount)){
       celebrated.add(g.amount);
-      localStorage.setItem('donothon-hits', JSON.stringify([...celebrated]));
-      setTimeout(() => div.classList.remove('hit'), 2000);
-      setTimeout(() => timer.classList.remove('hit'), 2000);
-      confetti({particleCount:1000, spread:180, origin:{y:0.55}});
-      sound.currentTime = 0;
-      sound.play().catch(()=>{});
-      // Trigger timer hit animation too
+      localStorage.setItem('donothon_celebrated_final', JSON.stringify([...celebrated]));
+      div.classList.add('hit');
       timer.classList.add('hit');
-      db.update({justHit: null}); // clear flag
+      setTimeout(()=>{div.classList.remove('hit'); timer.classList.remove('hit');},2000);
+      if(cache.theme?.confetti !== false) confetti({particleCount:1200,spread:180,origin:{y:0.55}});
+      sound.currentTime=0; sound.play().catch(()=>{});
+      db.child('justHit').remove();
     }
-
-    div.innerHTML = `
-      <div class="goal-title">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div>
-      <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
-      ${complete?'<div class="checkmark">Checkmark</div>':''}
-    `;
+    div.innerHTML = `<div class="goal-title">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div>
+                     <div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>
+                     ${complete?'<div class="checkmark">Checkmark</div>':''}`;
     container.appendChild(div);
   });
-
-  lastEarned = earned;
 }
-
-setInterval(()=>cache.endTime&&update(), 200);
+setInterval(()=>cache.endTime&&update(),200);
 </script>
 </body>
 </html>

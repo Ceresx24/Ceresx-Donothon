@@ -34,54 +34,107 @@
 <audio id="rs" src="https://static.wikia.nocookie.net/runescape/images/4/4f/Level_up.ogg/revision/latest?cb=20200101000000" preload="auto"></audio>
 
 <script>
-const cfg={apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"};
-const P='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
-firebase.initializeApp(cfg);const db=firebase.database().ref(P);
-let earned=0;const done=new Set();const sound=document.getElementById('rs');
+const cfg = { /* your firebase config */ };
+const P = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
+firebase.initializeApp(cfg);
+const db = firebase.database().ref(P);
+const sound = document.getElementById('rs');
 
-db.child('theme').on('value',s=>{const t=s.val()||{};Object.entries(t).forEach(([k,v])=>v&&document.documentElement.style.setProperty('--'+k,v));document.documentElement.style.setProperty('--s',t.goalScale||1);});
-db.child('settings').on('value',s=>document.getElementById('n').textContent=(s.val()||{}).streamerName||"Donothon Timer by Ceres");
+let earned = 0;
+let dataCache = {};
+const done = new Set(JSON.parse(localStorage.getItem('doneGoals') || '[]'));
 
-function update(){
-  db.once('value').then(snap=>{
-    const d=snap.val()||{},cfg=d.config||{},ne=+d.totalEarned||0;
-    const goals=Object.values(cfg.milestones||{}).sort((a,b)=>a.amount-b.amount);
-    const newGoalHit=goals.find(g=>earned<g.amount&&ne>=g.amount);
-    
-    if(newGoalHit){
-      // Timer flash + confetti
-      const timer=document.getElementById('t');timer.classList.add('f');setTimeout(()=>timer.classList.remove('f'),1500);
-      confetti({particleCount:1000,spread:180,origin:{y:.55}});
-      // Play RuneScape sound
-      sound.currentTime=0;sound.play();
+// Theme & streamer name
+db.child('theme').on('value', s => {
+  const t = s.val() || {};
+  Object.entries(t).forEach(([k, v]) => v && document.documentElement.style.setProperty('--' + k, v));
+  document.documentElement.style.setProperty('--s', t.goalScale || 1);
+});
+db.child('settings').on('value', s => {
+  document.getElementById('n').textContent = (s.val() || {}).streamerName || "Donothon Timer by Ceres";
+});
+
+// Main data listener (replaces setInterval spam)
+db.on('value', snap => {
+  dataCache = snap.val() || {};
+  updateDisplay();
+});
+
+function updateDisplay() {
+  const d = dataCache;
+  const cfg = d.config || {};
+  const ne = +d.totalEarned || 0;
+  const goals = Object.values(cfg.milestones || {}).sort((a, b) => a.amount - b.amount);
+
+  // === Timer ===
+  const end = d.endTime || Date.now() + 10800000;
+  const bonus = +d.bonusSeconds || 0;
+  const paused = !!d.paused;
+  const now = Date.now();
+
+  let left = paused && d.pausedAt
+    ? Math.floor((d.pausedAt + bonus * 1000 - now) / 1000)
+    : Math.floor((end + bonus * 1000 - now) / 1000);
+  left = Math.max(0, left);
+
+  const h = ('0' + Math.floor(left / 3600)).slice(-2);
+  const m = ('0' + Math.floor(left % 3600 / 60)).slice(-2);
+  const s = ('0' + left % 60).slice(-2);
+
+  const timerEl = document.getElementById('t');
+  timerEl.textContent = `${h}:${m}:${s}`;
+  timerEl.className = '';
+  if (bonus) timerEl.classList.add('b');
+  if (paused) timerEl.classList.add('p');
+
+  // === Stats ===
+  document.getElementById('r').textContent = ne.toFixed(2);
+  document.getElementById('g').textContent = (cfg.goal || 10000).toLocaleString();
+  document.getElementById('s').textContent = d.subsCount || 0;
+  document.getElementById('b').textContent = d.bitsCount || 0;
+
+  // === Goals ===
+  const m = document.getElementById('m');
+  m.innerHTML = '';
+  const visibleGoals = goals.filter(g => ne < g.amount + 5000).slice(0, 3);
+
+  visibleGoals.forEach(g => {
+    const complete = ne >= g.amount;
+    const pct = Math.min(100, (ne / g.amount) * 100);
+
+    const div = document.createElement('div');
+    div.className = `g${complete ? ' c' : ''}`;
+
+    if (complete && !done.has(g.amount)) {
+      done.add(g.amount);
+      localStorage.setItem('doneGoals', JSON.stringify([...done]));
+      div.classList.add('flash');
+      setTimeout(() => div.classList.remove('flash'), 1600);
+
+      // Celebration!
+      confetti({ particleCount: 600, spread: 160, origin: { y: 0.6 } });
+      sound.currentTime = 0;
+      sound.play().catch(() => {});
     }
-    earned=ne;
 
-    // Timer logic
-    const end=d.endTime||Date.now()+10800000,bonus=+d.bonusSeconds||0,p=!!d.paused,now=Date.now();
-    let left=p&&d.pausedAt?Math.floor((d.pausedAt+bonus*1000-now)/1000):Math.floor((end+bonus*1000-now)/1000);
-    left=Math.max(0,left);
-    const h=('0'+Math.floor(left/3600)).slice(-2),m=('0'+Math.floor(left%3600/60)).slice(-2),sec=('0'+left%60).slice(-2);
-    const t=document.getElementById('t');t.textContent=`${h}:${m}:${sec}`;t.className=(bonus?'b ':'')+(p?'p':'');
-
-    document.getElementById('r').textContent=earned.toFixed(2);
-    document.getElementById('g').textContent=(cfg.goal||10000).toLocaleString();
-    document.getElementById('s').textContent=d.subsCount||0;
-    document.getElementById('b').textContent=d.bitsCount||0;
-
-    // Goals rendering
-    const m=document.getElementById('m');m.innerHTML='';
-    goals.filter(g=>earned<g.amount+5000).slice(0,3).forEach(g=>{
-      const complete=earned>=g.amount,pct=Math.min(100,earned/g.amount*100);
-      const div=document.createElement('div');
-      div.className=`g${complete?' c':''}`;
-      if(complete && !done.has(g.amount)){done.add(g.amount);div.classList.add('flash');setTimeout(()=>div.classList.remove('flash'),1600);}
-      div.innerHTML=`<div class="gt">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div>
-        <div style="position:relative"><div class="bar" style="width:${pct}%"></div>${complete?'<div class="ck">CHECKMARK</div>':''}</div>`;
-      m.appendChild(div);
-    });
+    div.innerHTML = `
+      <div class="gt">$${g.amount.toLocaleString()} → ${g.description || 'Goal'}</div>
+      <div style="position:relative">
+        <div class="bar" style="width:${pct}%"></div>
+        ${complete ? '<div class="ck">✓</div>' : ''}
+      </div>`;
+    m.appendChild(div);
   });
+
+  earned = ne;
 }
-setInterval(update,500);update();
+
+// Clock ticking (only updates timer text)
+setInterval(() => {
+  if (dataCache.endTime !== undefined) updateDisplay();
+}, 200);
+
+// Initial load
+updateDisplay();
 </script>
 </body></html>

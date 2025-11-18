@@ -2,172 +2,82 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ceres Donothon — FINAL PERFECT FULLSCREEN</title>
+<title>Ceres Donothon Overlay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --timer-main: #00ffaa;
-    --timer-glow: #00e5ff;
-    --bar-start: #a855f7;
-    --bar-end: #00e5ff;
-    --bg: transparent;
-    --text: #ffffff;
-    --scale: 1;
-  }
-  *{margin:0;padding:0;box-sizing:border-box}
-  body{
-    background:var(--bg);overflow:hidden;
-    font-family:'JetBrains Mono',monospace;color:var(--text);
-    height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;
-  }
-  #overlay{
-    text-align:center;transform:scale(var(--scale));
-  }
-  #liveTimer{
-    font-size:96px;font-weight:700;letter-spacing:4px;
-    background:linear-gradient(90deg,var(--timer-main),var(--timer-glow));
-    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
-    text-shadow:0 0 20px rgba(0,255,170,.4);
-    transition:all .6s;
-  }
-  #liveTimer.glow{
-    text-shadow:0 0 40px var(--timer-main),0 0 80px var(--timer-glow),0 0 120px var(--timer-main);
-    transform:scale(1.05);
-  }
-  #stats{
-    margin-top:16px;font-size:32px;font-weight:500;opacity:0.9;
-  }
-  .milestone-container{
-    width:90%;max-width:1200px;margin:60px auto 0;display:flex;flex-direction:column;gap:20px;
-  }
-  .milestone{
-    background:rgba(20,20,40,.6);border-radius:20px;padding:20px;
-    border:2px solid rgba(100,100,150,.3);transition:all .5s;
-    position:relative;overflow:hidden;
-  }
-  .milestone.complete{
-    border-color:var(--timer-main);box-shadow:0 0 40px rgba(0,255,170,.4);
-  }
-  .milestone-label{
-    font-size:24px;font-weight:700;margin-bottom:12px;
-    display:flex;justify-content:space-between;
-  }
-  .bar-bg{
-    height:32px;background:#111;border-radius:16px;overflow:hidden;
-    box-shadow:inset 0 8px 16px #0004;
-  }
-  .bar{
-    height:100%;width:0%;
-    background:linear-gradient(90deg,var(--bar-start),var(--bar-end));
-    border-radius:16px;transition:width 1.8s cubic-bezier(0.16,1,0.3,1);
-    box-shadow:0 0 30px rgba(168,85,247,.6);
-  }
-  .complete .bar{background:linear-gradient(90deg,var(--timer-main),#00ffaa);}
-  .check{
-    position:absolute;right:30px;top:50%;transform:translateY(-50%);
-    font-size:5em;opacity:0;color:var(--timer-main);
-  }
-  .complete .check{animation:check 1.6s forwards}
-  @keyframes check{
-    0%{opacity:0;transform:translateY(-50%) scale(0) rotate(-180deg)}
-    60%{opacity:1;transform:translateY(-50%) scale(1.3)}
-    100%{opacity:1;transform:translateY(-50%) scale(1)}
-  }
+:root{--bg:#0d0b1c;--card:#14132b;--accent:#a855f7;--accent2:#c17aff;--text:#e2e8f0;--success:#00ffaa;--danger:#ff3366;--border:#2d2a57}
+*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center}
+#overlayContainer{width:100%;max-width:1400px;padding:20px;text-align:center}
+#liveTimer{font-family:'JetBrains Mono',monospace;font-size:92px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.milestone-bar{background:#1e1c38;border-radius:12px;margin:10px 0;position:relative;height:28px;overflow:hidden}
+.milestone-fill{height:100%;border-radius:12px;background:linear-gradient(90deg,var(--accent),var(--accent2));transition:width 0.5s ease}
+.milestone-label{position:absolute;left:10px;top:0;height:100%;display:flex;align-items:center;color:var(--text);font-weight:600}
 </style>
 </head>
 <body>
-
-<div id="overlay">
+<div id="overlayContainer">
+  <h2 id="streamerName">Ceres Donothon</h2>
   <div id="liveTimer">03:00:00</div>
-  <div id="stats">Raised: $0.00 • Subs: 0 • Bits: 0</div>
-  <div class="milestone-container" id="milestones"></div>
+  <div id="raisedAmount">Raised: $0.00</div>
+  <div id="milestones"></div>
 </div>
-
-<audio id="goalSound" preload="auto"></audio>
-
 <script>
-const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
-firebase.initializeApp({
-  apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
-  authDomain:"ceres-donothon-timer.firebaseapp.com",
-  databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",
-  projectId:"ceres-donothon-timer"
-});
-const db = firebase.database().ref(PATH);
-const sound = document.getElementById('goalSound');
-const completed = new Set();
+const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
+firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
+const ref=firebase.database().ref(PATH);
 
-db.child('theme').on('value', s => {
-  const t = s.val() || {};
-  if (t.goalScale) document.documentElement.style.setProperty('--scale', t.goalScale);
-  if (t.timerMain) document.documentElement.style.setProperty('--timer-main', t.timerMain);
-  if (t.timerGlow) document.documentElement.style.setProperty('--timer-glow', t.timerGlow);
-  if (t.barStart) document.documentElement.style.setProperty('--bar-start', t.barStart);
-  if (t.barEnd) document.documentElement.style.setProperty('--bar-end', t.barEnd);
-  if (t.sound) sound.src = t.sound;
-  if (t.soundVolume !== undefined) sound.volume = t.soundVolume / 100;
-});
+ref.child('settings/streamerName').on('value',s=>document.getElementById('streamerName').textContent=s.val()||'Ceres');
+ref.on('value',updateOverlay);
+ref.child('config/milestones').on('value',renderMilestones);
 
-setInterval(() => {
-  db.once('value').then(snap => {
-    const d = snap.val() || {};
-    
-    // Timer
-    const now = Date.now();
-    const bonus = (d.bonusSeconds || 0) * 1000;
-    const base = d.paused && d.pausedAt ? d.pausedAt : (d.endTime || now + 10800000);
-    const left = Math.max(0, Math.floor((base + bonus - now) / 1000));
-    const h = ('0'+Math.floor(left/3600)).slice(-2);
-    const m = ('0'+Math.floor(left%3600/60)).slice(-2);
-    const s = ('0'+left%60).slice(-2);
-    document.getElementById('liveTimer').textContent = `${h}:${m}:${s}`;
+function updateOverlay(s){
+  const d=s.val()||{};
+  let left=0;
+  if(d.endTime||d.pausedAt){
+    const bonus=(d.bonusSeconds||0)*1000;
+    const base=d.paused&&d.pausedAt?d.pausedAt:(d.endTime||0);
+    left=Math.max(0,Math.floor((base+bonus-Date.now())/1000));
+  }
+  const h=('0'+Math.floor(left/3600)).slice(-2);
+  const m=('0'+Math.floor(left%3600/60)).slice(-2);
+  const sec=('0'+left%60).slice(-2);
+  document.getElementById('liveTimer').textContent=`${h}:${m}:${sec}`;
+  document.getElementById('raisedAmount').textContent=`Raised: $${(d.totalEarned||0).toFixed(2)}`;
+  updateMilestoneFill(d.totalEarned||0);
+}
 
-    // Stats
-    document.getElementById('stats').innerHTML = 
-      `Raised: $${(d.totalEarned||0).toFixed(2)} • Subs: ${d.subsCount||0} • Bits: ${d.bitsCount||0}`;
-
-    // Milestones
-    renderMilestones(d.config?.milestones || {}, d.totalEarned || 0);
+let milestoneData={};
+function renderMilestones(s){
+  milestoneData=s.val()||{};
+  const container=document.getElementById('milestones');
+  container.innerHTML='';
+  Object.entries(milestoneData).sort((a,b)=>a[1].amount-b[1].amount).forEach(([id,g])=>{
+    const bar=document.createElement('div');
+    bar.className='milestone-bar';
+    bar.id='milestone-'+id;
+    const fill=document.createElement('div');
+    fill.className='milestone-fill';
+    fill.style.width='0%';
+    const label=document.createElement('div');
+    label.className='milestone-label';
+    label.textContent=`$${g.amount.toFixed(2)} - ${g.description}`;
+    bar.appendChild(fill);
+    bar.appendChild(label);
+    container.appendChild(bar);
   });
-}, 250);
+}
 
-function renderMilestones(goalsObj, earned) {
-  const container = document.getElementById('milestones');
-  container.innerHTML = '';
-
-  const goals = Object.values(goalsObj || {})
-    .sort((a,b) => a.amount - b.amount)
-    .filter(g => earned < g.amount + 10000);
-
-  goals.slice(0, 4).forEach(g => {
-    const pct = Math.min(100, (earned / g.amount) * 100);
-    const hit = earned >= g.amount;
-
-    const div = document.createElement('div');
-    div.className = `milestone ${hit ? 'complete' : ''}`;
-    div.innerHTML = `
-      <div class="milestone-label">
-        <span>${g.description || 'Goal'}</span>
-        <span>$${g.amount.toLocaleString()}</span>
-      </div>
-      <div class="bar-bg"><div class="bar" style="width:${pct}%"></div></div>
-      ${hit ? '<div class="check">Checkmark</div>' : ''}
-    `;
-
-    if (hit && !completed.has(g.amount)) {
-      completed.add(g.amount);
-      document.getElementById('liveTimer').classList.add('glow');
-      setTimeout(() => document.getElementById('liveTimer').classList.remove('glow'), 3000);
-      confetti({particleCount: 400, spread: 100, origin: { y: 0.6 }});
-      sound.currentTime = 0;
-      sound.play().catch(() => {});
+function updateMilestoneFill(total){
+  Object.entries(milestoneData).forEach(([id,g])=>{
+    const bar=document.getElementById('milestone-'+id);
+    if(bar){
+      const fill=bar.querySelector('.milestone-fill');
+      const pct=Math.min(100,(total/g.amount)*100);
+      fill.style.width=pct+'%';
     }
-
-    container.appendChild(div);
   });
 }
 </script>

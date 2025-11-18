@@ -1,5 +1,9 @@
 <!DOCTYPE html>
-<html lang="en"><head><meta charset="UTF-8"><title>Ceres Donothon — FINAL + MILESTONES</title><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ceres Donothon Dashboard — Full Custom</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
@@ -10,20 +14,20 @@
 #loginScreen h1{font-size:36px;margin-bottom:10px;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 input,button{width:100%;padding:14px 16px;border-radius:12px;border:none;font-size:16px;margin:8px 0;background:#1e1c38;color:var(--text)}
 button{background:var(--accent);color:white;font-weight:600;cursor:pointer;transition:.2s}
-button:hover{background:var(--accent2);transform:translateY(-2px)}
+button:hover{background:#c17aff;transform:translateY(-2px)}
 button.success{background:#00c853} button.danger{background:var(--danger)}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}
 .card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.4)}
 .card h2{font-size:24px;color:var(--accent);margin-bottom:20px}
-.slider-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:10px 0}
-.value{min-width:60px;text-align:right;padding:6px 10px;background:#1e1c38;border-radius:8px;font-weight:600}
+.color-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:10px 0}
 .live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:32px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:30px}
 #liveTimer{font-family:'JetBrains Mono',monospace;font-size:92px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.quick-add{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
 .goal-item{background:#1e1c38;padding:14px;border-radius:12px;margin:10px 0;display:flex;gap:12px;align-items:center;border-left:4px solid var(--accent)}
-.goal-item input{width:100%;background:transparent;border:none;color:var(--text);font-size:16px}
-.goal-item button{background:#e91e63;color:white;padding:8px 16px}
-</style></head><body>
+.goal-item input{background:transparent;border:none;color:var(--text);font-size:16px;flex:1}
+select{background:#1e1c38;color:var(--text);border-radius:12px;padding:8px;font-size:16px}
+</style>
+</head>
+<body>
 
 <div id="loginScreen">
   <h1>CERES DONOTHON</h1><p>Control Panel</p>
@@ -32,79 +36,87 @@ button.success{background:#00c853} button.danger{background:var(--danger)}
 </div>
 
 <div id="main" style="display:none;max-width:1400px;width:100%;padding:20px">
-  <h1 style="text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Ceres Donothon — FINAL + MILESTONES</h1>
+  <h1 style="text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Ceres Donothon — FULL CUSTOM</h1>
 
   <div class="live-preview">
     <h2 style="color:#fff">Donothon by <span id="liveName">Ceres</span></h2>
     <div id="liveTimer">03:00:00</div>
-    <div style="font-size:28px">Raised: $<span id="liveRaised">0.00</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
+    <div style="font-size:28px">Raised: $<span id="liveRaised">0.00</span></div>
     <div class="status" id="status">STOPPED</div>
   </div>
 
   <div class="grid">
     <div class="card">
-      <h2>Socket Token</h2>
-      <input type="text" id="socketToken" placeholder="Streamlabs / SE token">
-      <button class="success" onclick="saveSocketToken()">SAVE & CONNECT</button>
-      <div style="margin-top:8px;font-weight:600;color:var(--success)" id="socketStatus">Not connected</div>
+      <h2>Colors & Appearance</h2>
+      <div class="color-row"><label>Border/Glow</label><input type="color" value="#a855f7" onchange="saveColor('a',this.value)"></div>
+      <div class="color-row"><label>Background</label><input type="color" value="#08081c" onchange="saveColor('b',this.value+'d0')"></div>
+      <div class="color-row"><label>Text</label><input type="color" value="#ffffff" onchange="saveColor('t',this.value)"></div>
+      <div class="color-row"><label>Bar Start</label><input type="color" value="#a855f7" onchange="saveColor('g1',this.value)"></div>
+      <div class="color-row"><label>Bar End</label><input type="color" value="#00e5ff" onchange="saveColor('g2',this.value)"></div>
+      <div class="color-row"><label>Goal Hit</label><input type="color" value="#00ffaa" onchange="saveColor('gh',this.value)"></div>
+      <div class="color-row"><label>Timer Glow</label><input type="color" value="#00ffaa" onchange="saveColor('th',this.value)"></div>
+      <div class="color-row"><label>Timer Font</label>
+        <select onchange="saveFont(this.value)">
+          <option value='JetBrains Mono'>JetBrains Mono</option>
+          <option value='Orbitron'>Orbitron</option>
+          <option value='Exo 2'>Exo 2</option>
+          <option value='Arial'>Arial</option>
+          <option value='Verdana'>Verdana</option>
+        </select>
+      </div>
+      <div class="color-row"><label>Animation</label>
+        <select onchange="saveAnimation(this.value)">
+          <option value='none'>None</option>
+          <option value='pulse'>Pulse</option>
+          <option value='scale'>Scale</option>
+          <option value='glow'>Glow</option>
+          <option value='bounce'>Bounce</option>
+        </select>
+      </div>
+      <button style="margin-top:15px" onclick="resetColors()">Reset Colors</button>
     </div>
 
     <div class="card">
       <h2>Timer Control</h2>
-      <input type="number" id="startHours" value="3" min="0" placeholder="Hours">
-      <input type="number" id="startMinutes" value="0" min="0" max="59" placeholder="Minutes">
+      <input type="number" id="startHours" value="3" min="0" style="width:48%;display:inline-block"> <input type="number" id="startMinutes" value="0" min="0" max="59" style="width:48%;display:inline-block">
       <button class="success" style="padding:18px;font-size:20px;margin:10px 0" onclick="startTimer()">START TIMER</button>
       <button id="pauseBtn" style="padding:16px;font-size:18px" onclick="togglePause()">PAUSE TIMER</button>
-      <div class="quick-add">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px">
         <button onclick="addTime(5)">+5 min</button>
         <button onclick="addTime(10)">+10 min</button>
         <button onclick="addTime(30)">+30 min</button>
       </div>
-      <button class="danger" style="margin-top:10px" onclick="if(confirm('DELETE ALL DATA?'))resetAll()">RESET ALL</button>
     </div>
 
     <div class="card">
       <h2>Event Rewards (seconds)</h2>
-      <div class="slider-grid"><label>Tier 1</label><input type="range" min="0" max="600" value="60" id="t1" oninput="saveReward('t1',this.value);v('t1',this.value)"><span class="value" id="t1v">60</span></div>
-      <div class="slider-grid"><label>Tier 2</label><input type="range" min="0" max="600" value="120" id="t2" oninput="saveReward('t2',this.value);v('t2',this.value)"><span class="value" id="t2v">120</span></div>
-      <div class="slider-grid"><label>Tier 3</label><input type="range" min="0" max="600" value="300" id="t3" oninput="saveReward('t3',this.value);v('t3',this.value)"><span class="value" id="t3v">300</span></div>
-      <div class="slider-grid"><label>Gift Sub</label><input type="range" min="0" max="600" value="60" id="gift" oninput="saveReward('gift',this.value);v('gift',this.value)"><span class="value" id="giftv">60</span></div>
-      <div class="slider-grid"><label>Donation/$1</label><input type="range" min="0" max="300" value="60" id="don" oninput="saveReward('don',this.value);v('don',this.value)"><span class="value" id="donv">60</span></div>
-      <div class="slider-grid"><label>Bits/100</label><input type="range" min="0" max="300" value="30" id="bits" oninput="saveReward('bits',this.value);v('bits',this.value)"><span class="value" id="bitsv">30</span></div>
+      <div class="color-row"><label>Tier 1</label><input type="range" min="0" max="600" value="60" id="t1" oninput="saveReward('t1',this.value);v('t1',this.value)"><span id="t1v">60</span></div>
+      <div class="color-row"><label>Tier 2</label><input type="range" min="0" max="600" value="120" id="t2" oninput="saveReward('t2',this.value);v('t2',this.value)"><span id="t2v">120</span></div>
+      <div class="color-row"><label>Tier 3</label><input type="range" min="0" max="600" value="300" id="t3" oninput="saveReward('t3',this.value);v('t3',this.value)"><span id="t3v">300</span></div>
+      <div class="color-row"><label>Gift Sub</label><input type="range" min="0" max="600" value="60" id="gift" oninput="saveReward('gift',this.value);v('gift',this.value)"><span id="giftv">60</span></div>
+      <div class="color-row"><label>Donation/$1</label><input type="range" min="0" max="300" value="60" id="don" oninput="saveReward('don',this.value);v('don',this.value)"><span id="donv">60</span></div>
+      <div class="color-row"><label>Bits/100</label><input type="range" min="0" max="300" value="30" id="bits" oninput="saveReward('bits',this.value);v('bits',this.value)"><span id="bitsv">30</span></div>
     </div>
+
+    <div class="card">
+      <h2>Socket Token</h2>
+      <input type="text" id="socketToken" placeholder="Streamlabs / SE token">
+      <button class="success" onclick="saveSocketToken()">SAVE & CONNECT</button>
+      <div style="margin-top:8px;color:var(--success);font-weight:600" id="socketStatus">Not connected</div>
+    </div>
+
   </div>
 
-  <!-- FULL MILESTONES SECTION -->
   <div class="card" style="margin-top:30px">
-    <h2>Milestones / Goals</h2>
-    <div id="goalList">Loading milestones...</div>
-    <div style="display:flex;gap:12px;margin-top:20px;flex-wrap:wrap">
+    <h2>Milestones</h2>
+    <div id="goalList">Loading...</div>
+    <div style="display:flex;gap:12px;margin-top:20px">
       <input type="number" step="0.01" id="newGoalAmount" placeholder="$ Amount" style="width:160px">
-      <input type="text" id="newGoalDesc" placeholder="Description (e.g. Sing a song)" style="flex:1">
+      <input type="text" id="newGoalDesc" placeholder="Description" style="flex:1">
+      <input type="text" id="newGoalSound" placeholder="Sound URL" style="flex:1">
       <button class="success" onclick="addGoal()">+ ADD GOAL</button>
     </div>
-    <small style="display:block;margin-top:10px;color:#94a3b8">Goals appear on widget in order of amount (lowest → highest)</small>
   </div>
-
-  <div class="grid" style="margin-top:20px">
-    <div class="card">
-      <h2>Manual Add</h2>
-      <input type="number" step="0.01" id="addMoney" placeholder="Donation amount ($)">
-      <input type="number" id="addMinutes" placeholder="Extra minutes">
-      <button onclick="addMoneyAndTime()">Add $ + Time</button>
-      <button onclick="addMoneyOnly()">Add $ Only (+1min/$)</button>
-      <button style="margin-top:8px" onclick="addTimeOnly()">Add Time Only</button>
-    </div>
-
-    <div class="card">
-      <h2>Appearance</h2>
-      <input id="streamerName" placeholder="Your name">
-      <button onclick="updateName()">Update Name</button>
-      <label style="margin-top:15px;display:block">Goal Box Scale: <strong><span id="scaleValue">100</span>%</strong></label>
-      <input type="range" min="50" max="200" value="100" id="goalScale" oninput="document.getElementById('scaleValue').textContent=this.value;saveScale(this.value)">
-    </div>
-  </div>
-</div>
 
 <script>
 const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
@@ -112,7 +124,6 @@ const PASSWORDS=['Rin125','125','Rinmod125'];
 firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
 const ref = firebase.database().ref(PATH);
 
-// Login
 document.getElementById('pw').addEventListener('keypress', e => e.key==='Enter' && login());
 function login() {
   if (PASSWORDS.includes(document.getElementById('pw').value.trim())) {
@@ -135,11 +146,7 @@ function init() {
     document.getElementById('socketStatus').textContent = s.val() ? 'Connected!' : 'Not connected';
   });
   ref.child('config/eventRewards').on('value', loadRewards);
-  ref.child('theme/goalScale').on('value', s => {
-    const val = Math.round((s.val() || 1) * 100);
-    document.getElementById('goalScale').value = val;
-    document.getElementById('scaleValue').textContent = val;
-  });
+  ref.child('theme').on('value', loadColors);
   ref.child('config/milestones').on('value', renderGoals);
 }
 
@@ -157,40 +164,25 @@ function updateLive() {
     const sec = ('0'+left%60).slice(-2);
     document.getElementById('liveTimer').textContent = `${h}:${m}:${sec}`;
     document.getElementById('liveRaised').textContent = (d.totalEarned || 0).toFixed(2);
-    document.getElementById('liveSubs').textContent = d.subsCount || 0;
-    document.getElementById('liveBits').textContent = d.bitsCount || 0;
   });
 }
 
-// PAUSE / TIMER
 function togglePause() {
   ref.once('value').then(snap => {
     const d = snap.val() || {};
     const now = Date.now();
     const bonus = (d.bonusSeconds || 0) * 1000;
-
     if (d.paused) {
-      // ——— RESUMING FROM PAUSE ———
-      const frozenMoment = d.pausedAt;                    // This is the exact future timestamp we froze at
-      ref.update({
-        endTime: frozenMoment + bonus,
-        paused: false,
-        pausedAt: null
-      });
+      const frozen = d.pausedAt;
+      ref.update({ endTime: frozen + bonus, paused: false, pausedAt: null });
     } else {
-      // ——— PAUSING THE TIMER ———
-      // If timer is running → calculate exact moment it should resume from
-      const currentEndTime = d.endTime || (now + 10800000); // fallback 3h if somehow missing
-      const frozenMoment = currentEndTime + bonus;
-
-      ref.update({
-        paused: true,
-        pausedAt: frozenMoment,
-        endTime: null
-      });
+      const currentEnd = d.endTime || (now + 10800000);
+      const frozen = currentEnd + bonus;
+      ref.update({ paused: true, pausedAt: frozen, endTime: null });
     }
   });
 }
+
 function startTimer() {
   const h = +document.getElementById('startHours').value || 0;
   const m = +document.getElementById('startMinutes').value || 0;
@@ -198,51 +190,29 @@ function startTimer() {
 }
 function addTime(m) { ref.child('bonusSeconds').transaction(v => (v || 0) + m*60); }
 
-// MANUAL ADD
-function addMoneyAndTime() { const money = +document.getElementById('addMoney').value || 0; const mins = +document.getElementById('addMinutes').value || 0; if(money||mins) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+money; x.bonusSeconds=(x.bonusSeconds||0)+mins*60; return x;}); document.getElementById('addMoney').value=''; document.getElementById('addMinutes').value=''; }
-function addMoneyOnly() { const money = +document.getElementById('addMoney').value || 0; if(money) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+money; x.bonusSeconds=(x.bonusSeconds||0)+money*60; return x;}); document.getElementById('addMoney').value=''; }
-function addTimeOnly() { const mins = +document.getElementById('addMinutes').value || 0; if(mins) ref.child('bonusSeconds').transaction(v=>(v||0)+mins*60); document.getElementById('addMinutes').value=''; }
+function saveColor(k,v) { ref.child('theme/'+k).set(v); }
+function resetColors() { if(confirm('Reset colors?')) ref.child('theme').remove(); }
+function loadColors(s) {
+  const t = s.val() || {};
+  document.querySelectorAll('input[type=color]').forEach(input => {
+    const key = input.getAttribute('onchange').match(/'(\w+)'/)[1];
+    if (t[key]) input.value = t[key].replace(/d0$/,'').replace(/[^0-9a-f]/gi,'');
+  });
+}
 
-// REWARDS + APPEARANCE
-function saveReward(k,v){ref.child('config/eventRewards/'+k).set(+v);}
-function v(id,val){document.getElementById(id+'v').textContent=val;}
-function loadRewards(s){const r=s.val()||{};['t1','t2','t3','gift','don','bits'].forEach(k=>{if(r[k]!==undefined){document.getElementById(k).value=r[k];document.getElementById(k+'v').textContent=r[k];}});}
-function saveScale(val){ref.child('theme/goalScale').set(val/100);}
-function updateName(){ref.child('settings/streamerName').set(document.getElementById('streamerName').value.trim()|| 'Ceres');}
-function saveSocketToken(){ref.child('socketToken').set(document.getElementById('socketToken').value.trim()||null);}
+function saveReward(k,v) { ref.child('config/eventRewards/'+k).set(+v); }
+function v(id,val) { document.getElementById(id+'v').textContent = val; }
+function loadRewards(s) {
+  const r = s.val() || {};
+  ['t1','t2','t3','gift','don','bits'].forEach(k => {
+    if (r[k] !== undefined) { document.getElementById(k).value = r[k]; document.getElementById(k+'v').textContent = r[k]; }
+  });
+}
 
-// MILESTONES — FULLY WORKING
+function saveSocketToken() { ref.child('socketToken').set(document.getElementById('socketToken').value.trim() || null); }
+
 function addGoal() {
-  const amount = +document.getElementById('newGoalAmount').value;
+  const amt = +document.getElementById('newGoalAmount').value;
   const desc = document.getElementById('newGoalDesc').value.trim();
-  if (!amount || !desc) return alert('Fill both fields!');
-  ref.child('config/milestones').push({ amount, description: desc });
-  document.getElementById('newGoalAmount').value = '';
-  document.getElementById('newGoalDesc').value = '';
-}
-
-function renderGoals(snap) {
-  const goals = snap.val() || {};
-  const list = document.getElementById('goalList');
-  list.innerHTML = '';
-  if (Object.keys(goals).length === 0) {
-    list.innerHTML = '<p style="color:#94a3b8;text-align:center">No milestones yet — add one below!</p>';
-    return;
-  }
-  Object.entries(goals)
-    .sort((a,b) => a[1].amount - b[1].amount)
-    .forEach(([id, g]) => {
-      const div = document.createElement('div');
-      div.className = 'goal-item';
-      div.innerHTML = `
-        <span>$${g.amount.toFixed(2)}</span>
-        <input value="${g.description}" onblur="ref.child('config/milestones/${id}/description').set(this.value)">
-        <button onclick="ref.child('config/milestones/${id}').remove();">Delete</button>
-      `;
-      list.appendChild(div);
-    });
-}
-
-function resetAll() { if(confirm('This deletes EVERYTHING including milestones!')) ref.set({}); }
-</script>
-</body></html>
+  const snd = document.getElementById('newGoalSound').value.trim();
+  if (!amt || !desc) return alert('Fill all fields!');

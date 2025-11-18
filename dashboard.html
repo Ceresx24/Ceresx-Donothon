@@ -2,225 +2,177 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ceres Donothon — Dashboard</title>
+<title>Ceres Donothon — Ultimate Dashboard</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#0d0b1c;--card:#14132b;--accent:#a855f7;--accent2:#c17aff;
-  --text:#e2e8f0;--success:#00ffaa;--danger:#ff3366;--border:#2d2a57
+:root {
+  --bg:#0d0b1c; --card:#14132b; --accent:#a855f7; --accent2:#c17aff;
+  --text:#e2e8f0; --success:#00ffaa; --danger:#ff3366; --border:#2d2a57;
+  --timer:#ffffff; --timerPaused:#ff5555; --timerBonus:#00ffaa; --goalScale:1; --timerScale:1;
 }
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;}
-#loginScreen, #main{width:100%;max-width:1200px;}
-#loginScreen{background:linear-gradient(135deg,#14132b,#0f0f22);padding:50px 40px;border-radius:20px;box-shadow:0 20px 60px rgba(0,0,0,.6);text-align:center;border:1px solid var(--border)}
-#loginScreen h1{font-size:36px;margin-bottom:10px;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-input,button{width:100%;padding:14px 16px;border-radius:12px;border:none;font-size:16px;margin:8px 0;background:#1e1c38;color:var(--text)}
-button{background:var(--accent);color:white;font-weight:600;cursor:pointer;transition:.2s}
-button:hover{background:var(--accent2);transform:translateY(-2px)}
-button.success{background:var(--success)} button.danger{background:var(--danger)}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px;margin-top:20px;}
-.card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,.4);}
-.card h2{font-size:24px;color:var(--accent);margin-bottom:20px}
-.slider-grid{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;margin:10px 0}
-.value{min-width:60px;text-align:right;padding:6px 10px;background:#1e1c38;border-radius:8px;font-weight:600}
-.live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:32px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:30px}
-#liveTimer{font-family:'JetBrains Mono',monospace;font-size:92px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.quick-add{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-top:10px}
+*{box-sizing:border-box;margin:0;padding:0;font-family:'Inter',sans-serif}
+body{background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:20px}
+h1,h2{margin-bottom:12px}
+h1{font-size:32px;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center}
+h2{font-size:22px;color:var(--accent)}
+input,select,button{font-size:16px;padding:10px;border-radius:8px;border:none;margin:6px 0;width:100%;background:#1e1c38;color:var(--text)}
+button{cursor:pointer;transition:.2s}
+button:hover{transform:translateY(-1px)}
+button.success{background:#00c853;color:#fff}
+button.danger{background:var(--danger);color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:20px;width:100%}
+.card{background:var(--card);border-radius:16px;padding:20px;border:1px solid var(--border);box-shadow:0 6px 24px rgba(0,0,0,.3)}
+.card h3{margin-bottom:10px;color:var(--accent);font-size:20px}
+.live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:24px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:20px}
+#liveTimer{font-family:'JetBrains Mono',monospace;font-size:64px;background:linear-gradient(90deg,var(--success),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px;transform:scale(var(--timerScale))}
+.status{font-weight:600;margin-top:6px}
+.slider-grid{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:8px 0}
+.value{min-width:50px;text-align:right;padding:4px 8px;background:#1e1c38;border-radius:6px;font-weight:600}
+.milestone{display:flex;gap:10px;margin:6px 0;align-items:center}
+.milestone input{flex:1}
+.milestone button{flex:0 0 auto;padding:6px}
 </style>
 </head>
 <body>
 
-<div id="loginScreen">
-  <h1>CERES DONOTHON</h1>
-  <p>Control Panel</p>
-  <input type="password" id="pw" placeholder="Password" autofocus>
-  <button onclick="login()">UNLOCK</button>
+<h1>Ceres Donothon — Dashboard</h1>
+
+<div class="live-preview">
+  <h2>Live Overlay Preview: <span id="liveName">Ceres</span></h2>
+  <div id="liveTimer">03:00:00</div>
+  <div>Raised: $<span id="liveRaised">0.00</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
+  <div class="status" id="status">STOPPED</div>
 </div>
 
-<div id="main" style="display:none;">
-  <h1 style="text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px">Ceres Donothon — Dashboard</h1>
+<div class="grid">
 
-  <div class="live-preview">
-    <h2 style="color:#fff">Donothon by <span id="liveName">Ceres</span></h2>
-    <div id="liveTimer">03:00:00</div>
-    <div style="font-size:28px">Raised: $<span id="liveRaised">0.00</span> • Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
-    <div class="status" id="status">STOPPED</div>
+<!-- TIMER CONTROL -->
+<div class="card">
+  <h3>Timer Control</h3>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+    <input type="number" id="startHours" value="3" min="0">
+    <input type="number" id="startMinutes" value="0" min="0" max="59">
   </div>
-
-  <div class="grid">
-    <!-- Socket Token -->
-    <div class="card">
-      <h2>Socket Token (Streamlabs / SE)</h2>
-      <input type="text" id="socketToken" placeholder="Paste token here">
-      <button class="success" onclick="saveSocketToken()">SAVE & CONNECT</button>
-      <div style="margin-top:8px;font-weight:600;color:var(--success)" id="socketStatus">Not connected</div>
-    </div>
-
-    <!-- Timer Control -->
-    <div class="card">
-      <h2>Timer Control</h2>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <input type="number" id="startHours" value="3" min="0"><input type="number" id="startMinutes" value="0" min="0" max="59">
-      </div>
-      <button class="success" style="padding:18px;font-size:20px" onclick="startTimer()">START TIMER</button>
-      <button id="pauseBtn" style="padding:16px;font-size:18px" onclick="togglePause()">PAUSE TIMER</button>
-      <div class="quick-add">
-        <button onclick="addTime(5)">+5 min</button>
-        <button onclick="addTime(10)">+10 min</button>
-        <button onclick="addTime(30)">+30 min</button>
-      </div>
-      <button class="danger" style="margin-top:10px" onclick="if(confirm('DELETE EVERYTHING?'))resetAll()">RESET ALL</button>
-    </div>
-
-    <!-- Event Rewards -->
-    <div class="card">
-      <h2>Event Rewards (seconds)</h2>
-      <div class="slider-grid"><label>Tier 1</label><input type="range" min="0" max="600" value="60" id="t1" oninput="saveReward('t1',this.value);v('t1',this.value)"><span class="value" id="t1v">60</span></div>
-      <div class="slider-grid"><label>Tier 2</label><input type="range" min="0" max="600" value="120" id="t2" oninput="saveReward('t2',this.value);v('t2',this.value)"><span class="value" id="t2v">120</span></div>
-      <div class="slider-grid"><label>Tier 3</label><input type="range" min="0" max="600" value="300" id="t3" oninput="saveReward('t3',this.value);v('t3',this.value)"><span class="value" id="t3v">300</span></div>
-      <div class="slider-grid"><label>Gift Sub</label><input type="range" min="0" max="600" value="60" id="gift" oninput="saveReward('gift',this.value);v('gift',this.value)"><span class="value" id="giftv">60</span></div>
-      <div class="slider-grid"><label>Donation/$1</label><input type="range" min="0" max="300" value="60" id="don" oninput="saveReward('don',this.value);v('don',this.value)"><span class="value" id="donv">60</span></div>
-      <div class="slider-grid"><label>Bits/100</label><input type="range" min="0" max="300" value="30" id="bits" oninput="saveReward('bits',this.value);v('bits',this.value)"><span class="value" id="bitsv">30</span></div>
-    </div>
-
-    <!-- Manual Add -->
-    <div class="card">
-      <h2>Manual Add</h2>
-      <input type="number" step="0.01" id="addMoney" placeholder="Donation amount ($)">
-      <input type="number" id="addMinutes" placeholder="Extra minutes">
-      <button onclick="addMoneyAndTime()">Add $ + Time</button>
-      <button onclick="addMoneyOnly()">Add $ Only (+1min/$)</button>
-      <button style="margin-top:8px" onclick="addTimeOnly()">Add Time Only</button>
-    </div>
-
-    <!-- Appearance -->
-    <div class="card">
-      <h2>Appearance</h2>
-      <input id="streamerName" placeholder="Streamer name">
-      <button onclick="updateName()">Update Name</button>
-      <label>Goal Scale: <strong><span id="scaleValue">100</span>%</strong></label>
-      <input type="range" min="50" max="200" value="100" id="goalScale" oninput="document.getElementById('scaleValue').textContent=this.value;saveScale(this.value)">
-    </div>
+  <button class="success" onclick="startTimer()">Start Timer</button>
+  <button id="pauseBtn" onclick="togglePause()">Pause Timer</button>
+  <div style="display:flex;gap:6px;margin-top:6px">
+    <button onclick="addTime(5)">+5 min</button>
+    <button onclick="addTime(10)">+10 min</button>
+    <button onclick="addTime(30)">+30 min</button>
   </div>
+  <button class="danger" style="margin-top:10px" onclick="resetAll()">RESET ALL</button>
+</div>
+
+<!-- MILESTONES -->
+<div class="card">
+  <h3>Milestones</h3>
+  <div id="milestonesContainer"></div>
+  <button class="success" onclick="addMilestone()">Add Milestone</button>
+</div>
+
+<!-- EVENT REWARDS -->
+<div class="card">
+  <h3>Event Rewards (seconds)</h3>
+  <div class="slider-grid"><label>Tier 1</label><input type="range" min="0" max="600" id="t1" oninput="saveReward('t1',this.value);v('t1',this.value)"><span class="value" id="t1v">60</span></div>
+  <div class="slider-grid"><label>Tier 2</label><input type="range" min="0" max="600" id="t2" oninput="saveReward('t2',this.value);v('t2',this.value)"><span class="value" id="t2v">120</span></div>
+  <div class="slider-grid"><label>Tier 3</label><input type="range" min="0" max="600" id="t3" oninput="saveReward('t3',this.value);v('t3',this.value)"><span class="value" id="t3v">300</span></div>
+  <div class="slider-grid"><label>Gift Sub</label><input type="range" min="0" max="600" id="gift" oninput="saveReward('gift',this.value);v('gift',this.value)"><span class="value" id="giftv">60</span></div>
+  <div class="slider-grid"><label>Donation/$1</label><input type="range" min="0" max="300" id="don" oninput="saveReward('don',this.value);v('don',this.value)"><span class="value" id="donv">60</span></div>
+  <div class="slider-grid"><label>Bits/100</label><input type="range" min="0" max="300" id="bits" oninput="saveReward('bits',this.value);v('bits',this.value)"><span class="value" id="bitsv">30</span></div>
+</div>
+
+<!-- APPEARANCE -->
+<div class="card">
+  <h3>Appearance & Animations</h3>
+  <input id="streamerName" placeholder="Streamer Name"><button onclick="updateName()">Update Name</button>
+  <label>Timer Scale: <span id="timerScaleVal">100</span>%</label>
+  <input type="range" min="50" max="200" id="timerScaleSlider" value="100" oninput="updateTimerScale(this.value)">
+  <label>Goal Scale: <span id="goalScaleVal">100</span>%</label>
+  <input type="range" min="50" max="200" id="goalScaleSlider" value="100" oninput="updateGoalScale(this.value)">
+  <label>Colors</label>
+  <input type="color" id="colorTimer" value="#ffffff" onchange="updateColor('timer',this.value)">
+  <input type="color" id="colorGoal" value="#00ffaa" onchange="updateColor('goalHit',this.value)">
+  <label><input type="checkbox" id="confettiToggle" checked> Confetti on goal</label>
+</div>
+
 </div>
 
 <script>
 const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
-const PASSWORDS=['Rin125','125','Rinmod125'];
 firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
-const ref = firebase.database().ref(PATH);
+const ref=firebase.database().ref(PATH);
+let milestonesDone = new Set();
 
-// Login
-document.getElementById('pw').addEventListener('keypress', e => e.key==='Enter' && login());
-function login() {
-  if (PASSWORDS.includes(document.getElementById('pw').value.trim())) {
-    document.getElementById('loginScreen').style.display = 'none';
-    document.getElementById('main').style.display = 'block';
-    init();
-  } else alert('Wrong password');
+// TIMER
+function startTimer() {
+  const h=+document.getElementById('startHours').value||0;
+  const m=+document.getElementById('startMinutes').value||0;
+  const duration = (h*3600 + m*60)*1000;
+  ref.update({endTime: Date.now()+duration, paused:false, pausedAt:null, bonusSeconds:0});
 }
-
-// Init
-function init() {
-  setInterval(updateLive, 500);
-  ref.on('value', s => {
-    const d = s.val() || {};
-    document.getElementById('status').textContent = d.paused ? 'PAUSED' : (d.endTime ? 'LIVE' : 'STOPPED');
-    document.getElementById('pauseBtn').textContent = d.paused ? 'RESUME' : 'PAUSE';
-  });
-  ref.child('settings/streamerName').on('value', s => document.getElementById('liveName').textContent = s.val() || 'Ceres');
-  ref.child('socketToken').on('value', s => {
-    document.getElementById('socketToken').value = s.val() || '';
-    document.getElementById('socketStatus').textContent = s.val() ? 'Connected!' : 'Not connected';
-  });
-  ref.child('config/eventRewards').on('value', loadRewards);
-  ref.child('theme/goalScale').on('value', s => {
-    const val = (s.val() || 1) * 100;
-    document.getElementById('goalScale').value = val;
-    document.getElementById('scaleValue').textContent = Math.round(val);
+function togglePause() {
+  ref.once('value').then(snap=>{
+    const d = snap.val()||{};
+    if(d.paused) {
+      const frozen = d.pausedAt;
+      ref.update({paused:false, endTime:frozen, pausedAt:null});
+    } else {
+      const current = d.endTime || Date.now();
+      ref.update({paused:true, pausedAt:current, endTime:null});
+    }
   });
 }
+function addTime(min){ ref.child('bonusSeconds').transaction(v=>(v||0)+min*60); }
+function resetAll(){ if(confirm('DELETE EVERYTHING?')) ref.set({}); }
+
+// MILESTONES
+function addMilestone() {
+  const container = document.getElementById('milestonesContainer');
+  const div = document.createElement('div'); div.className='milestone';
+  const amt = document.createElement('input'); amt.type='number'; amt.placeholder='Amount';
+  const desc = document.createElement('input'); desc.placeholder='Description';
+  const del = document.createElement('button'); del.textContent='X'; del.onclick=()=>{div.remove();};
+  div.append(amt,desc,del);
+  container.appendChild(div);
+}
+
+// EVENT REWARDS
+function saveReward(key,val){ ref.child('config/eventRewards/'+key).set(+val); }
+function v(id,val){ document.getElementById(id+'v').textContent=val; }
+
+// APPEARANCE
+function updateName(){ ref.child('settings/streamerName').set(document.getElementById('streamerName').value||'Ceres'); }
+function updateTimerScale(val){ document.getElementById('timerScaleVal').textContent=val; document.documentElement.style.setProperty('--timerScale',val/100); ref.child('theme/timerScale').set(val/100);}
+function updateGoalScale(val){ document.getElementById('goalScaleVal').textContent=val; document.documentElement.style.setProperty('--goalScale',val/100); ref.child('theme/goalScale').set(val/100);}
+function updateColor(prop,val){ ref.child('theme/'+prop).set(val); }
 
 // LIVE PREVIEW
 function updateLive() {
-  ref.once('value').then(s => {
-    const d = s.val() || {};
-    let left = 0;
-    if (d.paused) {
-      left = Math.floor((d.pausedAt || 0)/1000);
-    } else if (d.endTime) {
-      const bonus = (d.bonusSeconds || 0) * 1000;
-      left = Math.max(0, Math.floor((d.endTime + bonus - Date.now()) / 1000));
+  ref.once('value').then(s=>{
+    const d=s.val()||{};
+    let left=0;
+    if(d.endTime || d.pausedAt){
+      const bonus=(d.bonusSeconds||0)*1000;
+      const base=d.paused?d.pausedAt:d.endTime||0;
+      left=Math.max(0,Math.floor((base+bonus-Date.now())/1000));
     }
-
-    const h = ('0'+Math.floor(left / 3600)).slice(-2);
-    const m = ('0'+Math.floor((left % 3600) / 60)).slice(-2);
-    const sec = ('0'+(left % 60)).slice(-2);
-
-    document.getElementById('liveTimer').textContent = `${h}:${m}:${sec}`;
-    document.getElementById('status').textContent = d.paused ? 'PAUSED' : (d.endTime ? 'LIVE' : 'STOPPED');
-    document.getElementById('pauseBtn').textContent = d.paused ? 'RESUME' : 'PAUSE';
-
-    document.getElementById('liveRaised').textContent = (d.totalEarned || 0).toFixed(2);
-    document.getElementById('liveSubs').textContent = d.subsCount || 0;
-    document.getElementById('liveBits').textContent = d.bitsCount || 0;
+    const h=('0'+Math.floor(left/3600)).slice(-2);
+    const m=('0'+Math.floor(left%3600/60)).slice(-2);
+    const sec=('0'+left%60).slice(-2);
+    document.getElementById('liveTimer').textContent=`${h}:${m}:${sec}`;
+    document.getElementById('liveRaised').textContent=(d.totalEarned||0).toFixed(2);
+    document.getElementById('liveSubs').textContent=d.subsCount||0;
+    document.getElementById('liveBits').textContent=d.bitsCount||0;
+    document.getElementById('status').textContent=d.paused?'PAUSED':(d.endTime?'LIVE':'STOPPED');
+    document.getElementById('pauseBtn').textContent=d.paused?'RESUME':'PAUSE';
+    document.getElementById('liveName').textContent=d.settings?.streamerName||'Ceres';
   });
 }
-
-// PAUSE/RESUME
-function togglePause() {
-  ref.once('value').then(snap => {
-    const d = snap.val() || {};
-    const now = Date.now();
-    const bonus = (d.bonusSeconds || 0) * 1000;
-
-    if (d.paused) {
-      // RESUME
-      const frozen = d.pausedAt || 0;
-      ref.update({ endTime: now + frozen, paused: false, pausedAt: null });
-    } else {
-      // PAUSE
-      const remaining = (d.endTime || now) - now + bonus;
-      ref.update({ paused: true, pausedAt: remaining, endTime: null });
-    }
-  });
-}
-
-// TIMER CONTROL
-function startTimer() {
-  const h = +document.getElementById('startHours').value || 0;
-  const m = +document.getElementById('startMinutes').value || 0;
-  const duration = (h * 3600 + m * 60) * 1000;
-  ref.update({ endTime: Date.now() + duration, bonusSeconds: 0, paused: false, pausedAt: null });
-}
-function addTime(minutes){ ref.child('bonusSeconds').transaction(v => (v||0) + minutes*60); }
-function addMoneyAndTime() {
-  const money = +document.getElementById('addMoney').value || 0;
-  const mins = +document.getElementById('addMinutes').value || 0;
-  if (money||mins) ref.transaction(x => { x.totalEarned = (x.totalEarned||0)+money; x.bonusSeconds = (x.bonusSeconds||0)+mins*60; return x; });
-  document.getElementById('addMoney').value=''; document.getElementById('addMinutes').value='';
-}
-function addMoneyOnly() {
-  const money = +document.getElementById('addMoney').value || 0;
-  if (money) ref.transaction(x => { x.totalEarned=(x.totalEarned||0)+money; x.bonusSeconds=(x.bonusSeconds||0)+money*60; return x; });
-  document.getElementById('addMoney').value='';
-}
-function addTimeOnly() {
-  const mins = +document.getElementById('addMinutes').value || 0;
-  if (mins) ref.child('bonusSeconds').transaction(v => (v||0)+mins*60);
-  document.getElementById('addMinutes').value='';
-}
-
-function saveSocketToken(){ const token=document.getElementById('socketToken').value.trim(); ref.child('socketToken').set(token||null); }
-function saveReward(key,val){ ref.child('config/eventRewards/'+key).set(+val); }
-function v(id,val){ document.getElementById(id+'v').textContent=val; }
-function loadRewards(s){ const r=s.val()||{}; ['t1','t2','t3','gift','don','bits'].forEach(k=>{ if(r[k]!==undefined){ document.getElementById(k).value=r[k]; document.getElementById(k+'v').textContent=r[k]; } }); }
-function saveScale(val){ ref.child('theme/goalScale').set(val/100); }
-function updateName(){ ref.child('settings/streamerName').set(document.getElementById('streamerName').value.trim()||'Ceres'); }
-function resetAll(){ if(confirm('This deletes EVERYTHING!')) ref.set({}); }
+setInterval(updateLive,500);
 </script>
+
 </body>
 </html>

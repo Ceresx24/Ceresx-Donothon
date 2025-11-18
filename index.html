@@ -7,40 +7,17 @@
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-
-<!-- FONTS -->
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Bebas+Neue&family=Rajdhani:wght@700&family=Anton&family=Monoton&family=Bungee&family=Press+Start+2P&family=Audiowide&family=Exo+2:wght@900&family=Righteous&family=Wallpoet&family=VT323&display=swap" rel="stylesheet">
-
 <style>
   :root{
     --accent:#9146FF;--bg:rgba(0,0,0,0.8);--text:white;--grad1:#9146FF;--grad2:#00ffcc;--check:#00ff99;
     --timer-size:140px;--stats-size:60px;--goal-text:48px;--goal-height:70px;--border:6px;--padding:40px;--spacing:30px;--radius:30px;--shadow:60px;
-    --font:'Impact';--animation:'none'
+    --font:'Impact',sans-serif;--animation:none
   }
-  body{margin:0;background:transparent;font-family:var(--font),sans-serif;color:var(--text);text-align:center}
-  .container{padding:var(--padding);border-radius:var(--radius);display:inline-block;background:var(--bg);border:var(--border) solid var(--accent);box-shadow:0 0 var(--shadow) var(--accent);transition:all 0.8s}
-  #timer{font-size:var(--timer-size);letter-spacing:10px;text-shadow:0 0 30px #000;margin:20px 0;transition:all 0.6s}
+  body{margin:0;background:transparent;font-family:var(--font);color:var(--text);text-align:center}
+  .container{padding:var(--padding);border-radius:var(--radius);display:inline-block;background:var(--bg);border:var(--border) solid var(--accent);box-shadow:0 0 var(--shadow) var(--accent);transition:all .8s}
+  #timer{font-size:var(--timer-size);letter-spacing:10px;text-shadow:0 0 30px #000;margin:20px 0;transition:all .6s}
   #timer.bonus{color:#00ff00 !important;text-shadow:0 0 50px #0f0 !important;transform:scale(1.05)}
-  
-  /* ANIMATIONS */
-  @keyframes pulse {0%,100%{transform:scale(1)} 50%{transform:scale(1.08)}}
-  @keyframes shake {0%,100%{transform:translateX(0)} 10%,30%,50%,70%,90%{transform:translateX(-10px)} 20%,40%,60%,80%{transform:translateX(10px)}}
-  @keyframes rainbow {0%{color:#ff0000}14%{color:#ff7f00}28%{color:#ffff00}42%{color:#00ff00}56%{color:#0000ff}70%{color:#4b0082}84%{color:#9400d3}100%{color:#ff0000}}
-  @keyframes glitch {0%,100%{text-shadow:0 0 20px #fff} 2%{text-shadow:2px 0 #f00,-2px 0 #0ff} 4%{text-shadow:-2px 0 #0f0,2px 0 #f0f}}
-  @keyframes bounce {0%,100%{transform:translateY(0)} 50%{transform:translateY(-30px)}}
-  @keyframes neon {0%,100%{text-shadow:0 0 20px #fff,0 0 40px var(--accent)} 50%{text-shadow:0 0 40px #fff,0 0 80px var(--accent)}}
-  @keyframes spin {from{transform:rotate(0deg)} to{transform:rotate(360deg)}}
-  @keyframes float {0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)}}
-  
-  .animate-pulse{animation:pulse 2s infinite}
-  .animate-shake{animation:shake 0.5s infinite}
-  .animate-rainbow{animation:rainbow 8s linear infinite}
-  .animate-glitch{animation:glitch 0.3s infinite}
-  .animate-bounce{animation:bounce 2s infinite}
-  .animate-neon{animation:neon 1.5s infinite}
-  .animate-spin{animation:spin 4s linear infinite}
-  .animate-float{animation:float 6s infinite}
-  
   .stats{font-size:var(--stats-size);margin:15px 0}
   .goal-row{background:#222;border-radius:20px;padding:20px;margin:var(--spacing) 0;position:relative;overflow:hidden;border:4px solid #444;transition:all 1s}
   .goal-row.complete{border-color:var(--check);background:rgba(0,100,0,0.8)}
@@ -49,6 +26,23 @@
   .checkmark{position:absolute;right:30px;top:50%;transform:translateY(-50%);font-size:110px;color:var(--check);opacity:0;transition:opacity 1s}
   .checkmark.show{opacity:1}
   .token-info{position:fixed;bottom:10px;left:10px;background:rgba(0,0,0,0.7);padding:10px;border-radius:10px;font-size:14px;color:#0f0}
+
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}10%,30%,50%,70%,90%{transform:translateX(-10px)}20%,40%,60%,80%{transform:translateX(10px)}}
+  @keyframes rainbow{0%{color:#ff0000}14%{color:#ff7f00}28%{color:#ffff00}42%{color:#00ff00}56%{color:#0000ff}70%{color:#4b0082}84%{color:#9400d3}100%{color:#ff0000}}
+  @keyframes glitch{0%,100%{text-shadow:0 0 20px #fff}2%{text-shadow:2px 0 #f00,-2px 0 #0ff}4%{text-shadow:-2px 0 #0f0,2px 0 #f0f}}
+  @keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-30px)}}
+  @keyframes neon{0%,100%{text-shadow:0 0 20px #fff,0 0 40px var(--accent)}50%{text-shadow:0 0 40px #fff,0 0 80px var(--accent)}}
+  @keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+  .animate-pulse{animation:pulse 2s infinite}
+  .animate-shake{animation:shake 0.5s infinite}
+  .animate-rainbow{animation:rainbow 8s linear infinite}
+  .animate-glitch{animation:glitch 0.3s infinite}
+  .animate-bounce{animation:bounce 2s infinite}
+  .animate-neon{animation:neon 1.5s infinite}
+  .animate-spin{animation:spin 4s linear infinite}
+  .animate-float{animation:float 6s infinite}
 </style>
 </head>
 <body>
@@ -58,72 +52,100 @@
   <div class="stats">Subs: <span id="subs">0</span> | Bits: <span id="bits">0</span></div>
   <div id="goals"></div>
 </div>
-<div class="token-info" id="tokenInfo">GOD MODE ACTIVE</div>
+<div class="token-info" id="tokenInfo">Read-only — Add ?token=… to add time!</div>
 
 <script>
-const firebaseConfig = { apiKey: "AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA", authDomain: "ceres-donothon-timer.firebaseapp.com", databaseURL: "https://ceres-donothon-timer-default-rtdb.firebaseio.com", projectId: "ceres-donothon-timer", storageBucket: "ceres-donothon-timer.firebasestorage.app", messagingSenderId: "62539165670", appId: "1:62539165670:web:170c8110449deba628b027", measurementId: "G-9F66NMVB2J" };
+const firebaseConfig = {apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer",storageBucket:"ceres-donothon-timer.firebasestorage.app",messagingSenderId:"62539165670",appId:"1:62539165670:web:170c8110449deba628b027",measurementId:"G-9F66NMVB2J"};
 const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database().ref(PATH);
 
 const fonts = {'Impact':'Impact','Orbitron':'Orbitron','Bebas Neue':'Bebas Neue','Rajdhani':'Rajdhani','Anton':'Anton','Monoton':'Monoton','Bungee':'Bungee','Press Start 2P':'Press Start 2P','Audiowide':'Audiowide','Exo 2':'Exo 2','Righteous':'Righteous','Wallpoet':'Wallpoet','VT323':'VT323'};
-const animations = ['none','pulse','shake','rainbow','glitch','bounce','neon','spin','float'];
 
-// Apply ALL theme + layout + font + animation
+// Apply theme + layout + font + animation
 db.child('theme').on('value', s => {
-  const t = s.val() || {};
-  const l = t.layout || {};
-  const f = t.font || 'Impact';
-  const a = t.animation || 'none';
-  
-  document.documentElement.style.setProperty('--font', fonts[f] || f);
-  document.documentElement.style.setProperty('--animation', a);
-  
+  const t = s.val()||{}, l = t.layout||{}, f = fonts[t.font]||'Impact', a = t.animation||'none';
+  document.documentElement.style.setProperty('--font', f);
   const timer = document.getElementById('timer');
   timer.className = timer.className.replace(/animate-\w+/g,'').trim();
-  if (a !== 'none') timer.classList.add('animate-'+a);
-  
-  Object.entries({...t, ...l}).forEach(([k,v]) => v && document.documentElement.style.setProperty('--'+k, v));
+  if(a!=='none') timer.classList.add('animate-'+a);
+  Object.entries({...t,...l}).forEach(([k,v])=>v&&document.documentElement.style.setProperty('--'+k,v));
 });
 
-// Rest of your perfect countdown + bits + hype train + goals code (same as before)
-let earned = 0, completed = new Set();
+let earned=0, completed=new Set();
 db.on('value', s => {
-  const d = s.val()||{}; const c = d.config||{}; earned = Number(d.totalEarned)||0;
+  const d=s.val()||{}, c=d.config||{}; earned=Number(d.totalEarned)||0;
   const baseEndTime = d.endTime || (Date.now() + 24*60*60*1000);
-  const bonusSeconds = Number(d.bonusSeconds)||0;
-  const totalSecondsLeft = Math.max(0, Math.floor((baseEndTime + bonusSeconds*1000 - Date.now())/1000));
-  const h = String(Math.floor(totalSecondsLeft/3600)).padStart(2,'0');
-  const m = String(Math.floor(totalSecondsLeft%3600/60)).padStart(2,'0');
-  const sec = String(totalSecondsLeft%60).padStart(2,'0');
-  const timerEl = document.getElementById('timer');
-  timerEl.textContent = `${h}:${m}:${sec}`;
-  timerEl.classList.toggle('bonus', bonusSeconds > 0);
+  const bonus = Number(d.bonusSeconds)||0;
+  const left = Math.max(0, Math.floor((baseEndTime + bonus*1000 - Date.now())/1000));
+  const h=String(Math.floor(left/3600)).padStart(2,'0');
+  const m=String(Math.floor(left%3600/60)).padStart(2,'0');
+  const sec=String(left%60).padStart(2,'0');
+  const timerEl=document.getElementById('timer');
+  timerEl.textContent=`${h}:${m}:${sec}`;
+  timerEl.classList.toggle('bonus', bonus>0);
 
-  document.getElementById('raised').textContent = earned.toFixed(2);
-  document.getElementById('subs').textContent = d.subsCount||0;
-  document.getElementById('bits').textContent = d.bitsCount||0;
+  document.getElementById('raised').textContent=earned.toFixed(2);
+  document.getElementById('goal').textContent=c.goal||10000;
+  document.getElementById('subs').textContent=d.subsCount||0;
+  document.getElementById('bits').textContent=d.bitsCount||0;
 
-  const container = document.getElementById('goals'); container.innerHTML = '';
-  const goals = Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
-  const active = goals.filter(g=>earned < g.amount+5000).slice(0,3);
-  active.forEach(g => {
-    const complete = earned >= g.amount;
-    const pct = Math.min(100, (earned/g.amount)*100);
-    const row = document.createElement('div');
-    row.className = `goal-row ${complete?'complete':''}`;
-    row.innerHTML = `<div style="font-size:var(--goal-text)">$${g.amount.toLocaleString()} → ${g.description}</div>
+  const container=document.getElementById('goals'); container.innerHTML='';
+  const goals=Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
+  const active=goals.filter(g=>earned < g.amount+5000).slice(0,3);
+  active.forEach(g=>{
+    const complete=earned>=g.amount;
+    const pct=Math.min(100,(earned/g.amount)*100);
+    const row=document.createElement('div');
+    row.className=`goal-row ${complete?'complete':''}`;
+    row.innerHTML=`<div style="font-size:var(--goal-text)">$${g.amount.toLocaleString()} → ${g.description}</div>
       <div style="position:relative;"><div class="bar-fill" style="width:${pct}%"></div>
       <div class="checkmark ${complete?'show':''}">CHECKMARK</div></div>`;
-    if (complete && !completed.has(g.amount)) { completed.add(g.amount); confetti({particleCount:800,spread:180}); }
+    if(complete && !completed.has(g.amount)){completed.add(g.amount);confetti({particleCount:800,spread:180,origin:{y:0.55}});}
     container.appendChild(row);
   });
 });
 
-// Token system (same working code)
-const params = new URLSearchParams(location.search);
-const token = params.get('token') || params.get('sl') || params.get('se') || '';
-if (token) { /* your full working token code from before */ }
+// TOKEN + ALL EVENTS ADD TIME
+const params=new URLSearchParams(location.search);
+const token=params.get('token')||params.get('sl')||params.get('se')||'';
+if(token){
+  document.getElementById('tokenInfo').textContent='CONNECTED — events add time!';
+  const isSE=token.length>50;
+  const socket=isSE?io('wss://realtime.streamelements.com',{transports:['websocket']}):io('https://sockets.streamlabs.com',{query:{token},transports:['websocket']});
+  if(isSE)socket.on('connect',()=>socket.emit('authenticate',{method:'jwt',token}));
+  socket.on('event',e=>{
+    if(!e?.type)return;
+    const msgs=Array.isArray(e.message)?e.message:[e.message||{}];
+    db.transaction(data=>{
+      if(!data)data={bonusSeconds:0,totalEarned:0,subsCount:0,bitsCount:0};
+      if(!data.endTime)data.endTime=Date.now()+24*60*60*1000;
+      msgs.forEach(m=>{
+        if(e.type.includes('donation')||e.type.includes('tip')){
+          const amt=parseFloat(m.amount||m.formatted_amount||0);
+          if(amt>0){data.totalEarned+=amt;data.bonusSeconds+=Math.floor(amt*60);}
+        }
+        if(e.type.includes('subscription')||e.type.includes('subscriber')){
+          const cnt=m.count||1;
+          data.subsCount=(data.subsCount||0)+cnt;
+          const price=m.sub_plan==='3000'?24.99:m.sub_plan==='2000'?9.99:4.99;
+          data.totalEarned+=price*cnt;
+          data.bonusSeconds+=300*cnt;
+        }
+        if(e.type.includes('bits')||e.type.includes('cheer')){
+          const bits=parseInt(m.amount||0);
+          if(bits>0){data.bitsCount=(data.bitsCount||0)+bits;data.totalEarned+=bits*0.01;data.bonusSeconds+=Math.floor(bits/100)*60;}
+        }
+        if(e.type==='hypetrain_start'||e.type==='hypetrain_level_up'){
+          const level=e.level||1;
+          data.bonusSeconds+=level*300;
+          confetti({particleCount:1000,spread:200,origin:{y:0.4}});
+        }
+      });
+      return data;
+    });
+  });
+}
 </script>
 </body>
 </html>

@@ -2,65 +2,81 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Ceres Donothon Overlay</title>
+<title>Ceres Donothon — FINAL PERFECT FULLSCREEN</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
 <style>
-body{
-  margin:0; padding:0; overflow:hidden;
-  background:transparent; font-family:'JetBrains Mono', monospace; color:white;
-}
-#overlay{
-  position:absolute; top:0; left:0; width:100%; height:100%;
-  display:flex; flex-direction:column; align-items:center; justify-content:center;
-  text-align:center;
-}
-#liveTimer{
-  font-size:92px; font-weight:600;
-  background:linear-gradient(90deg,#00ffaa,#00e5ff);
-  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-  text-shadow:0 0 10px rgba(0,255,170,.5);
-  transition: all 0.5s ease;
-}
-#liveTimer.glow{
-  text-shadow: 0 0 20px #00ffaa, 0 0 30px #00e5ff, 0 0 40px #00ffaa;
-}
-#stats{
-  margin-top:10px; font-size:28px;
-}
-.milestone-container{
-  width:80%; margin-top:40px; display:flex; flex-direction:column; gap:12px;
-}
-.milestone-bar{
-  width:100%; height:28px; border-radius:14px; overflow:hidden; background:#222;
-  border:2px solid #555; position:relative; transition: transform 0.3s ease;
-}
-.milestone-bar.pulse{
-  transform: scaleY(1.1);
-  animation: pulse 1s infinite alternate;
-}
-@keyframes pulse{
-  0%{transform:scaleY(1);}
-  100%{transform:scaleY(1.1);}
-}
-.milestone-fill{
-  height:100%; width:0%; background:linear-gradient(90deg,#a855f7,#00e5ff);
-  transition: width 0.5s ease, background 0.5s ease;
-}
-.milestone-label{
-  position:absolute; width:100%; left:0; top:0; height:100%; display:flex;
-  justify-content:space-between; align-items:center; padding:0 12px; font-size:16px; font-weight:600;
-}
-.confetti{
-  position:absolute; width:6px; height:6px; background:var(--accent); border-radius:50%;
-  animation:confetti-fall 1s ease-out forwards;
-}
-@keyframes confetti-fall{
-  0%{transform:translateY(0) rotate(0deg);}
-  100%{transform:translateY(100px) rotate(360deg); opacity:0;}
-}
+  :root{
+    --timer-main: #00ffaa;
+    --timer-glow: #00e5ff;
+    --bar-start: #a855f7;
+    --bar-end: #00e5ff;
+    --bg: transparent;
+    --text: #ffffff;
+    --scale: 1;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{
+    background:var(--bg);overflow:hidden;
+    font-family:'JetBrains Mono',monospace;color:var(--text);
+    height:100vh;width:100vw;display:flex;align-items:center;justify-content:center;
+  }
+  #overlay{
+    text-align:center;transform:scale(var(--scale));
+  }
+  #liveTimer{
+    font-size:96px;font-weight:700;letter-spacing:4px;
+    background:linear-gradient(90deg,var(--timer-main),var(--timer-glow));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    text-shadow:0 0 20px rgba(0,255,170,.4);
+    transition:all .6s;
+  }
+  #liveTimer.glow{
+    text-shadow:0 0 40px var(--timer-main),0 0 80px var(--timer-glow),0 0 120px var(--timer-main);
+    transform:scale(1.05);
+  }
+  #stats{
+    margin-top:16px;font-size:32px;font-weight:500;opacity:0.9;
+  }
+  .milestone-container{
+    width:90%;max-width:1200px;margin:60px auto 0;display:flex;flex-direction:column;gap:20px;
+  }
+  .milestone{
+    background:rgba(20,20,40,.6);border-radius:20px;padding:20px;
+    border:2px solid rgba(100,100,150,.3);transition:all .5s;
+    position:relative;overflow:hidden;
+  }
+  .milestone.complete{
+    border-color:var(--timer-main);box-shadow:0 0 40px rgba(0,255,170,.4);
+  }
+  .milestone-label{
+    font-size:24px;font-weight:700;margin-bottom:12px;
+    display:flex;justify-content:space-between;
+  }
+  .bar-bg{
+    height:32px;background:#111;border-radius:16px;overflow:hidden;
+    box-shadow:inset 0 8px 16px #0004;
+  }
+  .bar{
+    height:100%;width:0%;
+    background:linear-gradient(90deg,var(--bar-start),var(--bar-end));
+    border-radius:16px;transition:width 1.8s cubic-bezier(0.16,1,0.3,1);
+    box-shadow:0 0 30px rgba(168,85,247,.6);
+  }
+  .complete .bar{background:linear-gradient(90deg,var(--timer-main),#00ffaa);}
+  .check{
+    position:absolute;right:30px;top:50%;transform:translateY(-50%);
+    font-size:5em;opacity:0;color:var(--timer-main);
+  }
+  .complete .check{animation:check 1.6s forwards}
+  @keyframes check{
+    0%{opacity:0;transform:translateY(-50%) scale(0) rotate(-180deg)}
+    60%{opacity:1;transform:translateY(-50%) scale(1.3)}
+    100%{opacity:1;transform:translateY(-50%) scale(1)}
+  }
 </style>
 </head>
 <body>
@@ -71,100 +87,88 @@ body{
   <div class="milestone-container" id="milestones"></div>
 </div>
 
+<audio id="goalSound" preload="auto"></audio>
+
 <script>
-const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
+const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 firebase.initializeApp({
   apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
   authDomain:"ceres-donothon-timer.firebaseapp.com",
   databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",
   projectId:"ceres-donothon-timer"
 });
-const ref = firebase.database().ref(PATH);
+const db = firebase.database().ref(PATH);
+const sound = document.getElementById('goalSound');
+const completed = new Set();
 
-let milestonesData={};
-
-ref.on('value',snap=>{
-  const data=snap.val()||{};
-  updateTimer(data);
-  updateStats(data);
-  if(data.config?.milestones){
-    milestonesData=data.config.milestones;
-    renderMilestones(data.totalEarned||0);
-  }
-  applyColors(data.theme||{});
+db.child('theme').on('value', s => {
+  const t = s.val() || {};
+  if (t.goalScale) document.documentElement.style.setProperty('--scale', t.goalScale);
+  if (t.timerMain) document.documentElement.style.setProperty('--timer-main', t.timerMain);
+  if (t.timerGlow) document.documentElement.style.setProperty('--timer-glow', t.timerGlow);
+  if (t.barStart) document.documentElement.style.setProperty('--bar-start', t.barStart);
+  if (t.barEnd) document.documentElement.style.setProperty('--bar-end', t.barEnd);
+  if (t.sound) sound.src = t.sound;
+  if (t.soundVolume !== undefined) sound.volume = t.soundVolume / 100;
 });
 
-function updateTimer(d){
-  let left=0;
-  if(d.endTime || d.pausedAt){
-    const bonus=(d.bonusSeconds||0)*1000;
-    const base=d.paused&&d.pausedAt?d.pausedAt:(d.endTime||0);
-    left=Math.max(0,Math.floor((base+bonus-Date.now())/1000));
-  }
-  const h=('0'+Math.floor(left/3600)).slice(-2);
-  const m=('0'+Math.floor(left%3600/60)).slice(-2);
-  const s=('0'+left%60).slice(-2);
-  const timerEl=document.getElementById('liveTimer');
-  timerEl.textContent=`${h}:${m}:${s}`;
-}
+setInterval(() => {
+  db.once('value').then(snap => {
+    const d = snap.val() || {};
+    
+    // Timer
+    const now = Date.now();
+    const bonus = (d.bonusSeconds || 0) * 1000;
+    const base = d.paused && d.pausedAt ? d.pausedAt : (d.endTime || now + 10800000);
+    const left = Math.max(0, Math.floor((base + bonus - now) / 1000));
+    const h = ('0'+Math.floor(left/3600)).slice(-2);
+    const m = ('0'+Math.floor(left%3600/60)).slice(-2);
+    const s = ('0'+left%60).slice(-2);
+    document.getElementById('liveTimer').textContent = `${h}:${m}:${s}`;
 
-function updateStats(d){
-  document.getElementById('stats').textContent=
-    `Raised: $${(d.totalEarned||0).toFixed(2)} • Subs: ${d.subsCount||0} • Bits: ${d.bitsCount||0}`;
-}
+    // Stats
+    document.getElementById('stats').innerHTML = 
+      `Raised: $${(d.totalEarned||0).toFixed(2)} • Subs: ${d.subsCount||0} • Bits: ${d.bitsCount||0}`;
 
-function renderMilestones(total){
-  const container=document.getElementById('milestones');
-  container.innerHTML='';
-  Object.entries(milestonesData)
-    .sort((a,b)=>a[1].amount-b[1].amount)
-    .forEach(([id,m])=>{
-      const div=document.createElement('div');
-      div.className='milestone-bar';
-      const fill=document.createElement('div');
-      fill.className='milestone-fill';
-      let perc=Math.min(100,Math.floor((total/m.amount)*100));
-      fill.style.width=perc+'%';
-
-      // pulse if close to completion
-      if(perc>=80 && perc<100) div.classList.add('pulse');
-      else div.classList.remove('pulse');
-
-      // milestone complete glow
-      if(perc>=100 && !m.completed){
-        triggerConfetti();
-        document.getElementById('liveTimer').classList.add('glow');
-        setTimeout(()=>document.getElementById('liveTimer').classList.remove('glow'),2000);
-        milestonesData[id].completed=true;
-      }
-
-      div.appendChild(fill);
-      const label=document.createElement('div');
-      label.className='milestone-label';
-      label.innerHTML=`<span>${m.description}</span><span>$${m.amount.toFixed(2)}</span>`;
-      div.appendChild(label);
-      container.appendChild(div);
-    });
-}
-
-function triggerConfetti(){
-  for(let i=0;i<30;i++){
-    const conf=document.createElement('div');
-    conf.className='confetti';
-    conf.style.left=Math.random()*80+'%';
-    conf.style.backgroundColor='hsl('+(Math.random()*360)+',100%,50%)';
-    document.body.appendChild(conf);
-    setTimeout(()=>conf.remove(),1000);
-  }
-}
-
-function applyColors(theme){
-  document.querySelectorAll('.milestone-fill').forEach(el=>{
-    el.style.background=theme.g1 && theme.g2?`linear-gradient(90deg,${theme.g1},${theme.g2})`:'#a855f7';
+    // Milestones
+    renderMilestones(d.config?.milestones || {}, d.totalEarned || 0);
   });
-  const timerEl=document.getElementById('liveTimer');
-  timerEl.style.color=theme.th||'#00ffaa';
-  timerEl.style.textShadow=`0 0 10px ${theme.th||'#00ffaa'}`;
+}, 250);
+
+function renderMilestones(goalsObj, earned) {
+  const container = document.getElementById('milestones');
+  container.innerHTML = '';
+
+  const goals = Object.values(goalsObj || {})
+    .sort((a,b) => a.amount - b.amount)
+    .filter(g => earned < g.amount + 10000);
+
+  goals.slice(0, 4).forEach(g => {
+    const pct = Math.min(100, (earned / g.amount) * 100);
+    const hit = earned >= g.amount;
+
+    const div = document.createElement('div');
+    div.className = `milestone ${hit ? 'complete' : ''}`;
+    div.innerHTML = `
+      <div class="milestone-label">
+        <span>${g.description || 'Goal'}</span>
+        <span>$${g.amount.toLocaleString()}</span>
+      </div>
+      <div class="bar-bg"><div class="bar" style="width:${pct}%"></div></div>
+      ${hit ? '<div class="check">Checkmark</div>' : ''}
+    `;
+
+    if (hit && !completed.has(g.amount)) {
+      completed.add(g.amount);
+      document.getElementById('liveTimer').classList.add('glow');
+      setTimeout(() => document.getElementById('liveTimer').classList.remove('glow'), 3000);
+      confetti({particleCount: 400, spread: 100, origin: { y: 0.6 }});
+      sound.currentTime = 0;
+      sound.play().catch(() => {});
+    }
+
+    container.appendChild(div);
+  });
 }
 </script>
 </body>

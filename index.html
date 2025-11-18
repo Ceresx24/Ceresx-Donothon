@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Ceres Donothon — Overlay</title>
+<meta charset="utf-8">
+<title>Ceres Donothon Overlay</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
@@ -10,9 +10,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;700&family=Orbitron:wght@900&display=swap" rel="stylesheet">
 <style>
 html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center;font-size:62.5%}
-:root{--bg:rgba(8,8,28,0.96);--accent:#a855f7;--text:#fff;--timer:#fff;--timer-bonus:#00ffaa;--timer-paused:#ff5555;--grad1:#a855f7;--grad2:#00e5ff;--goal-complete:#00ffaa;--scale:1;--goal-hit:#00ffaa;--timer-hit:#00ffaa;}
+:root{--bg:rgba(8,8,28,0.96);--accent:#a855f7;--text:#fff;--timer:#fff;--timer-bonus:#00ffaa;--timer-paused:#ff5555;--grad1:#a855f7;--grad2:#00e5ff;--goal-complete:#00ffaa;--scale:1;--goal-hit:#00ffaa;--timer-hit:#00ffaa}
 .overlay{background:var(--bg);padding:5rem 6rem;border-radius:3.5rem;border:0.5rem solid var(--accent);box-shadow:0 0 8rem var(--accent),inset 0 0 5rem #a855f740;backdrop-filter:blur(12px);text-align:center;max-width:96%;transform:scale(var(--scale))}
-#timer{font:900 28rem/1 'Orbitron',sans-serif;color:var(--timer);text-shadow:0 0 2rem #000;margin:0 0 2rem;letter-spacing:.05em}
+#timer{font:900 28rem/1 'Orbitron',sans-serif;color:var(--timer);text-shadow:0 0 2rem #000;margin:0 0 2rem;letter-spacing:.05em;transition:color 0.3s, text-shadow 0.3s}
 #timer.paused{color:var(--timer-paused);text-shadow:0 0 3rem #f008;animation:pulse 2s infinite}
 #timer.bonus{color:var(--timer-bonus);text-shadow:0 0 4rem #0f08}
 #timer.hit{animation:timerHit 5s forwards}
@@ -21,13 +21,13 @@ html,body{margin:0;padding:0;width:100%;height:100%;overflow:hidden;background:t
 .stats{font:700 7rem 'Exo 2',sans-serif;color:var(--text);margin:1.5rem 0}
 .stats span{color:var(--accent)}
 .goals{display:flex;flex-direction:column;gap:3rem;align-items:center}
-.goal{background:#1e1e46c0;border-radius:2.5rem;padding:3rem;border:0.4rem solid #333;overflow:hidden;position:relative;width:100%;max-width:900px}
+.goal{background:#1e1e46c0;border-radius:2.5rem;padding:3rem;border:0.4rem solid #333;overflow:hidden;position:relative;width:100%;max-width:900px;cursor:grab}
 .goal.complete{border-color:var(--goal-complete);background:#004030e0;box-shadow:0 0 3rem #00ffaa60}
 .goal.hit{animation:goalHit 5s forwards}
 @keyframes goalHit{0%{transform:scale(1)}12%{transform:scale(1.22) rotate(5deg);box-shadow:0 0 12rem var(--goal-hit),0 0 20rem var(--goal-hit)}100%{transform:scale(1)}}
 .goal-title{font:700 7.5rem 'Exo 2',sans-serif;color:var(--text);margin-bottom:1.5rem;text-align:center}
 .bar-wrap{height:10rem;background:#0006;border-radius:2rem;overflow:hidden}
-.bar{height:100%;width:0;background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:2rem;transition:width 2.2s cubic-bezier(.2,.8,.4,1)}
+.bar{height:100%;width:0;background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:2rem;transition:width 1.5s cubic-bezier(.2,.8,.4,1)}
 .checkmark{position:absolute;right:4rem;top:50%;transform:translateY(-50%) scale(0) rotate(-45deg);font-size:18rem;color:var(--goal-complete);opacity:0}
 .goal.complete .checkmark{animation:check 1.2s .6s forwards}
 @keyframes check{0%{opacity:0;transform:translateY(-50%) scale(.3) rotate(-45deg)}70%{opacity:1;transform:translateY(-50%) scale(1.3) rotate(10deg)}100%{opacity:1;transform:translateY(-50%) scale(1) rotate(0)}}
@@ -49,29 +49,54 @@ const PATH='donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
 const db=firebase.database().ref(PATH);
 const sound=document.getElementById('sound');
-let cache={};
 const celebrated=new Set(JSON.parse(localStorage.getItem('donothon_celebrated_2025')||'[]'));
-db.on('value',s=>{cache=s.val()||{};update();});
-db.child('theme').on('value',s=>{const t=s.val()||{};Object.entries(t).forEach(([k,v])=>v!==null&&document.documentElement.style.setProperty('--'+k,v));sound.src=t.sound||"https://static.wikia.nocookie.net/runescape/images/4/4f/Level_up.ogg/revision/latest";sound.volume=Math.max(0,Math.min(1,(t.soundVolume||100)/100));document.getElementById('subsLine').classList.toggle('hide',!!t.hideSubs);document.getElementById('totalGoal').parentElement.classList.toggle('hide',!!t.hideGoal);document.getElementById('footerName').classList.toggle('hide',!!t.hideFooter);});
-db.child('settings/streamerName').on('value',s=>document.getElementById('footerName').textContent=s.val()||'Donothon Timer by Ceres');
-function update(){
-  const d=cache;const cfg=d.config||{};const earned=Number(d.totalEarned||0);const goals=Object.values(cfg.milestones||{}).sort((a,b)=>a.amount-b.amount);
-  let left=0;if(d.endTime||d.pausedAt){const baseTime=d.paused&&d.pausedAt?d.pausedAt:d.endTime;left=Math.max(0,Math.floor((baseTime+(d.bonusSeconds||0)*1000-Date.now())/1000));}
-  const h=('0'+Math.floor(left/3600)).slice(-2);const m=('0'+Math.floor(left%3600/60)).slice(-2);const s=('0'+left%60).slice(-2);
-  const timer=document.getElementById('timer');timer.textContent=`${h}:${m}:${s}`;timer.className=(d.bonusSeconds>0?'bonus':'')+(d.paused?' paused':'')+(d.justHit?' hit':'');
-  document.getElementById('raised').textContent=earned.toFixed(2);
+let cache={}, lastTime=Date.now();
+
+function smoothUpdate(){
+  const now=Date.now();
+  const delta=(now-lastTime)/1000;
+  lastTime=now;
+  const d=cache;
+  const cfg=d.config||{};
+  let left=0;
+  if(d.endTime||d.pausedAt){
+    const bonus=(d.bonusSeconds||0);
+    const base=d.paused&&d.pausedAt?d.pausedAt:d.endTime;
+    left=Math.max(0,(base/1000+bonus- now/1000));
+  }
+  const h=('0'+Math.floor(left/3600)).slice(-2), m=('0'+Math.floor(left%3600/60)).slice(-2), s=('0'+Math.floor(left%60)).slice(-2);
+  const timer=document.getElementById('timer');
+  timer.textContent=`${h}:${m}:${s}`;
+  timer.className=(d.bonusSeconds>0?'bonus':'')+(d.paused?' paused':'')+(d.justHit?' hit':'');
+  document.getElementById('raised').textContent=(d.totalEarned||0).toFixed(2);
   document.getElementById('totalGoal').textContent=(cfg.goal||10000).toLocaleString();
   document.getElementById('subs').textContent=d.subsCount||0;
   document.getElementById('bits').textContent=d.bitsCount||0;
-  const container=document.getElementById('goals');container.innerHTML='';
-  goals.filter(g=>earned<g.amount+5000).slice(0,3).forEach(g=>{
-    const complete=earned>=g.amount;const pct=complete?100:(earned/g.amount)*100;const div=document.createElement('div');div.className=`goal${complete?' complete':''}`;
-    if(complete&&!celebrated.has(g.amount)){celebrated.add(g.amount);localStorage.setItem('donothon_celebrated_2025',JSON.stringify([...celebrated]));div.classList.add('hit');timer.classList.add('hit');setTimeout(()=>{div.classList.remove('hit');timer.classList.remove('hit');},5000);if(d.theme?.confetti!==false)confetti({particleCount:1400,spread:180,origin:{y:0.55}});sound.currentTime=0;sound.play().catch(()=>{});db.child('justHit').remove();}
+
+  const container=document.getElementById('goals');
+  container.innerHTML='';
+  Object.values(cfg.milestones||{}).sort((a,b)=>a.amount-b.amount).filter(g=>d.totalEarned<g.amount+5000).slice(0,3).forEach(g=>{
+    const complete=d.totalEarned>=g.amount;
+    const pct=complete?100:(d.totalEarned/g.amount)*100;
+    const div=document.createElement('div');
+    div.className=`goal${complete?' complete':''}`;
+    if(complete&&!celebrated.has(g.amount)){
+      celebrated.add(g.amount);
+      localStorage.setItem('donothon_celebrated_2025',JSON.stringify([...celebrated]));
+      div.classList.add('hit');
+      timer.classList.add('hit');
+      setTimeout(()=>{div.classList.remove('hit');timer.classList.remove('hit');},5000);
+      if(d.theme?.confetti!==false) confetti({particleCount:1400,spread:180,origin:{y:0.55}});
+      sound.currentTime=0;sound.play().catch(()=>{});
+      db.child('justHit').remove();
+    }
     div.innerHTML=`<div class="goal-title">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div><div class="bar-wrap"><div class="bar" style="width:${pct}%"></div></div>${complete?'<div class="checkmark">Checkmark</div>':''}`;
     container.appendChild(div);
   });
 }
-setInterval(update,50);
+
+db.on('value',s=>{cache=s.val()||{};});
+setInterval(smoothUpdate,100);
 </script>
 </body>
 </html>

@@ -17,7 +17,7 @@ body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-h
 #loginScreen input{background:#1e1c38;border:none;color:white}
 #loginScreen button{background:var(--accent);border:none;color:white;font-weight:600;cursor:pointer}
 #main{display:none;max-width:1400px;width:100%;padding:30px}
-header h1{font-size:44px;text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+header h1{font-size:44px;text-align:center;background:linear-gradient(90deg,#a855f7,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:20px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:24px}
 .card{background:var(--card);border-radius:16px;padding:28px;border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.4)}
 .card h2{font-size:24px;color:var(--accent);margin-bottom:20px;display:flex;align-items:center;gap:10px}
@@ -26,6 +26,9 @@ input,button{width:100%;padding:14px 16px;border-radius:12px;border:none;font-si
 button{background:var(--accent);color:white;font-weight:600;cursor:pointer;transition:.2s}
 button:hover{background:var(--accent2);transform:translateY(-2px)}
 button.success{background:#00c853} button.danger{background:var(--danger)}
+.live-preview{background:linear-gradient(135deg,#14132b,#0f0f22);padding:32px;border-radius:20px;text-align:center;border:1px solid var(--border);margin-bottom:30px}
+#liveTimer{font-family:'JetBrains Mono',monospace;font-size:72px;background:linear-gradient(90deg,#00ffaa,#00e5ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px}
+.stats{font-size:24px;margin:5px 0}
 footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
 </style>
 </head>
@@ -40,10 +43,19 @@ footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
 
 <div id="main">
   <header><h1>Ceres Donothon Control Panel</h1></header>
+
+  <div class="live-preview">
+    <div id="liveTimer">03:00:00</div>
+    <div class="stats">Raised: $<span id="liveRaised">0.00</span> • Goal: $<span id="liveGoal">10,000</span></div>
+    <div class="stats" id="liveSubsLine">Subs: <span id="liveSubs">0</span> • Bits: <span id="liveBits">0</span></div>
+    <div class="stats" id="liveStatus">Status: STOPPED</div>
+  </div>
+
   <div class="grid">
     <div class="card">
       <h2>Timer Control</h2>
-      <button class="success" onclick="startTimer()">START 3-HOUR TIMER</button>
+      <input type="text" id="startingTime" placeholder="Enter hours:minutes (e.g., 3:00)">
+      <button class="success" onclick="setStartingTime()">Set Timer</button>
       <button id="pauseBtn" onclick="togglePause()">PAUSE</button>
       <button class="danger" onclick="resetAll()">RESET ALL DATA</button>
     </div>
@@ -64,29 +76,6 @@ footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
       <label>Total Goal ($)</label>
       <input type="number" id="dashboardGoal" value="10000">
       <button onclick="updateGoal()">Save Goal</button>
-
-      <label>Accent Color</label><input type="color" id="accentColor">
-      <label>Gradient Start</label><input type="color" id="grad1Color">
-      <label>Gradient End</label><input type="color" id="grad2Color">
-      <label>Goal Hit Color</label><input type="color" id="goalHitColor">
-      <label>Timer Hit Color</label><input type="color" id="timerHitColor">
-      <button onclick="saveThemeColors()">Save Colors</button>
-
-      <label><input type="checkbox" id="hideSubs"> Hide Subs/Bits Line</label>
-      <label><input type="checkbox" id="hideGoal"> Hide Goal Text</label>
-      <label><input type="checkbox" id="hideFooter"> Hide Footer</label>
-      <label><input type="checkbox" id="confetti"> Enable Confetti</label>
-
-      <label>Overlay Scale</label>
-      <input type="range" min="50" max="200" value="100" id="overlayScale" oninput="document.getElementById('scaleVal').textContent=this.value">
-      <span id="scaleVal">100</span>%
-      <button onclick="saveOverlayScale()">Apply Scale</button>
-
-      <label>Celebration Sound URL</label>
-      <input type="text" id="soundUrl">
-      <label>Sound Volume</label>
-      <input type="range" min="0" max="100" value="100" id="soundVolume">
-      <button onclick="saveSound()">Save Sound</button>
     </div>
   </div>
   <footer>Ceres Donothon Timer • 2025</footer>
@@ -99,28 +88,57 @@ firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDom
 const db = firebase.database().ref(PATH);
 
 // Login
-document.getElementById('pw').addEventListener('keypress', e => e.key==='Enter' && login());
-function login() {
-  if(PASSWORDS.includes(document.getElementById('pw').value.trim())){
-    document.getElementById('loginScreen').style.display='none';
-    document.getElementById('main').style.display='block';
-  } else alert('Wrong password');
+document.getElementById('pw').addEventListener('keypress', e=>e.key==='Enter' && login());
+function login(){if(PASSWORDS.includes(document.getElementById('pw').value.trim())){document.getElementById('loginScreen').style.display='none';document.getElementById('main').style.display='block'; initDashboard();} else alert('Wrong password');}
+
+// Dashboard live update
+let cache = {};
+function initDashboard(){
+  db.on('value', s=>{ cache = s.val()||{}; updateDashboard(); });
+  setInterval(updateDashboard, 200); // smooth live timer
 }
 
-// Timer controls
-function togglePause(){db.once('value').then(snap=>{const d=snap.val()||{}; if(d.paused){const bonus=(d.bonusSeconds||0)*1000; const remaining=d.pausedAt+bonus-Date.now(); db.update({endTime:Date.now()+Math.max(0,remaining),paused:false,pausedAt:null});} else {const bonus=(d.bonusSeconds||0)*1000; const frozenAt=Date.now()+((d.endTime||0)+bonus-Date.now()); db.update({paused:true,pausedAt:frozenAt,endTime:null});}});}
+function updateDashboard(){
+  const d = cache;
+  const cfg = d.config||{};
+  const earned = Number(d.totalEarned||0);
+
+  // Timer calculation
+  let left=0;
+  if(d.endTime || d.pausedAt){
+    const bonus=(d.bonusSeconds||0)*1000;
+    const base = d.paused && d.pausedAt ? d.pausedAt : d.endTime;
+    left = Math.max(0, Math.floor((base + bonus - Date.now())/1000));
+  }
+  const h=('0'+Math.floor(left/3600)).slice(-2);
+  const m=('0'+Math.floor(left%3600/60)).slice(-2);
+  const s=('0'+left%60).slice(-2);
+  document.getElementById('liveTimer').textContent=`${h}:${m}:${s}`;
+  document.getElementById('liveTimer').style.color=d.paused?'#ff5555':'#00ffaa';
+
+  document.getElementById('liveRaised').textContent=earned.toFixed(2);
+  document.getElementById('liveGoal').textContent=(cfg.goal||10000).toLocaleString();
+  document.getElementById('liveSubs').textContent=d.subsCount||0;
+  document.getElementById('liveBits').textContent=d.bitsCount||0;
+  document.getElementById('liveStatus').textContent=d.paused?'Status: PAUSED':(d.endTime?'Status: LIVE':'Status: STOPPED');
+}
+
+// Timer buttons
+function setStartingTime(){
+  const val=document.getElementById('startingTime').value.trim();
+  if(!val.includes(':')) return alert('Format should be H:MM or HH:MM');
+  const [h,m]=val.split(':').map(Number);
+  if(isNaN(h)||isNaN(m)) return alert('Invalid numbers');
+  const ms=(h*60+m)*60*1000;
+  db.update({endTime:Date.now()+ms,bonusSeconds:0,paused:false,pausedAt:null});
+}
 function startTimer(){db.update({endTime:Date.now()+10800000,bonusSeconds:0,paused:false,pausedAt:null});}
+function togglePause(){db.once('value').then(snap=>{const d=snap.val()||{}; if(d.paused){const bonus=(d.bonusSeconds||0)*1000; const remaining=d.pausedAt+bonus-Date.now(); db.update({endTime:Date.now()+Math.max(0,remaining),paused:false,pausedAt:null});} else {const bonus=(d.bonusSeconds||0)*1000; const frozenAt=Date.now()+((d.endTime||0)+bonus-Date.now()); db.update({paused:true,pausedAt:frozenAt,endTime:null});}});}
 function addMoneyAndTime(){const m=+document.getElementById('addMoney').value||0; const t=+document.getElementById('addMinutes').value||0;if(m||t) db.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+t*60;return x;}); document.getElementById('addMoney').value=''; document.getElementById('addMinutes').value='';}
 function addMoneyOnly(){const m=+document.getElementById('addMoney').value||0;if(m) db.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m;x.bonusSeconds=(x.bonusSeconds||0)+m*60;return x;}); document.getElementById('addMoney').value='';}
 function addTimeOnly(){const t=+document.getElementById('addMinutes').value||0;if(t) db.child('bonusSeconds').transaction(v=>(v||0)+t*60); document.getElementById('addMinutes').value='';}
 function resetAll(){if(confirm('This deletes EVERYTHING. Are you sure?')) db.set({config:{milestones:{},goal:10000},settings:{},theme:{},totalEarned:0,bonusSeconds:0,endTime:null,paused:false,pausedAt:null,subsCount:0,bitsCount:0});}
-
-// Overlay customizations
 function updateGoal(){const val=+document.getElementById('dashboardGoal').value;if(val>0) db.child('config/goal').set(val);}
-function saveThemeColors(){db.child('theme').update({accent:document.getElementById('accentColor').value,grad1:document.getElementById('grad1Color').value,grad2:document.getElementById('grad2Color').value,goalHitColor:document.getElementById('goalHitColor').value,timerHitColor:document.getElementById('timerHitColor').value});}
-function saveOverlayScale(){db.child('theme/goalScale').set(document.getElementById('overlayScale').value/100);}
-function saveSound(){db.child('theme').update({sound:document.getElementById('soundUrl').value||null,soundVolume:document.getElementById('soundVolume').value});}
-['hideSubs','hideGoal','hideFooter','confetti'].forEach(id=>document.getElementById(id).addEventListener('change', e=>db.child('theme').child(id).set(e.target.checked)));
 </script>
 </body>
 </html>

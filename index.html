@@ -2,43 +2,42 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Donothon Timer by Ceres</title>
+<title>Donothon Timer</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
-<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@600;800&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Exo+2:wght@500;700;900&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
 
 <style>
   html,body{margin:0;padding:0;height:100%;width:100%;overflow:hidden;background:transparent;display:flex;align-items:center;justify-content:center}
   :root{
-    --accent:#a855f7;--bg:rgba(10,8,30,0.95);--text:#ffffff;--grad1:#a855f7;--grad2:#00e0ff;--check:#00ffaa;
-    --timer:16vw;--stats:5.5vw;--goal:4.8vw;--bar:7.5vw;--pad:5.5vw;--space:3.8vw;--radius:4vw;--glow:9vw
+    --accent:#a855f7;--bg:rgba(8,8,28,0.96);--text:#ffffff;--grad1:#a855f7;--grad2:#00e5ff;--check:#00ffaa;
+    --timer:16vw;--stats:5.5vw;--goal:4.8vw;--bar:7.8vw;--pad:6vw;--space:4vw;--radius:4.5vw;--glow:10vw;
+    --font-timer:'Orbitron',sans-serif;--font-main:'Exo 2',sans-serif
   }
   .overlay{
-    background:var(--bg);padding:var(--pad);border-radius:var(--radius);border:0.4vw solid var(--accent);
-    box-shadow:0 0 var(--glow) var(--accent),inset 0 0 5vw rgba(168,85,247,0.25);
-    backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);text-align:center;max-width:94%;width:fit-content
+    background:var(--bg);padding:var(--pad);border-radius:var(--radius);border:0.45vw solid var(--accent);
+    box-shadow:0 0 var(--glow) var(--accent),inset 0 0 6vw rgba(168,85,247,0.2);
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);text-align:center;max-width:94%
   }
   #timer{
-    font-family:'Orbitron',sans-serif;font-size:var(--timer);font-weight:900;letter-spacing:0.7vw;
-    color:var(--text);text-shadow:0 0 4.5vw #000;margin:0 0 1.8vw 0;transition:all .7s
+    font-family:var(--font-timer);font-size:var(--timer);font-weight:900;letter-spacing:0.8vw;
+    color:var(--text);text-shadow:0 0 5vw #000;margin:0 0 2vw 0;transition:color .4s,text-shadow .4s
   }
-  #timer.paused{color:#ff5555 !important;text-shadow:0 0 6vw #f00 !important}
-  #timer.bonus{color:#00ffaa !important;text-shadow:0 0 7vw #0f0 !important;transform:scale(1.07)}
-  .stats{font-family:'Exo 2',sans-serif;font-size:var(--stats);margin:1.3vw 0;color:var(--text);font-weight:600}
+  #timer.paused{color:#ff5555 !important;text-shadow:0 0 7vw #f00 !important}
+  #timer.bonus{color:#00ffaa !important;text-shadow:0 0 8vw #0f0 !important}
+  .stats{font-family:var(--font-main);font-size:var(--stats);margin:1.4vw 0;color:var(--text);font-weight:600;opacity:0.95}
   .goal{
-    background:rgba(25,25,60,0.7);border-radius:2.8vw;padding:2.4vw;margin:var(--space) 0;
-    border:0.35vw solid #333;overflow:hidden;position:relative;transition:all 1.2s
+    background:rgba(30,30,70,0.75);border-radius:3vw;padding:2.5vw;margin:var(--space) 0;
+    border:0.4vw solid #333;overflow:hidden;position:relative;transition:all 1.3s;backdrop-filter:blur(4px)
   }
-  .goal.complete{border-color:var(--check);box-shadow:0 0 4vw #00ffaa60;background:rgba(0,60,40,0.7)}
-  .goal-text{font-family:'Exo 2',sans-serif;font-size:var(--goal);font-weight:700;margin-bottom:1.2vw}
-  .bar{height:var(--bar);background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:1.8vw;transition:width 2s ease}
-  .checkmark{position:absolute;right:3.5vw;top:50%;transform:translateY(-50%);font-size:13vw;color:var(--check);opacity:0;transition:opacity 1s}
+  .goal.complete{border-color:var(--check);box-shadow:0 0 5vw #00ffaa70;background:rgba(0,70,50,0.7)}
+  .goal-text{font-family:var(--font-main);font-size:var(--goal);font-weight:700;margin-bottom:1.3vw;color:var(--text)}
+  .bar{height:var(--bar);background:linear-gradient(90deg,var(--grad1),var(--grad2));border-radius:2vw;transition:width 2.2s ease}
+  .checkmark{position:absolute;right:4vw;top:50%;transform:translateY(-50%);font-size:14vw;color:var(--check);opacity:0;transition:opacity 1.2s}
   .checkmark.show{opacity:1}
-  .branding{
-    margin-top:4vw;font-family:'Exo 2',sans-serif;font-size:3.5vw;color:#aaa;font-weight:500;letter-spacing:0.2vw
-  }
+  .branding{margin-top:5vw;font-family:var(--font-main);font-size:3.6vw;color:#999;font-weight:500;letter-spacing:0.3vw}
 </style>
 </head>
 <body>
@@ -60,67 +59,92 @@ const db = firebase.database().ref(PATH);
 let earned = 0;
 const completed = new Set();
 
-// Custom name + theme
+// Apply theme & streamer name instantly
 db.child('settings').on('value', s => {
-  const settings = s.val() || {};
-  document.getElementById('branding').textContent = settings.streamerName || 'Donothon Timer by Ceres';
+  const st = s.val() || {};
+  document.getElementById('branding').textContent = st.streamerName || 'Donothon Timer by Ceres';
 });
 db.child('theme').on('value', s => {
   const t = s.val() || {};
   Object.entries(t).forEach(([k,v]) => v && document.documentElement.style.setProperty('--'+k, v));
 });
 
-// Main timer + goals
-db.on('value', s => {
-  const d = s.val() || {};
-  const c = d.config || {};
-  earned = Number(d.totalEarned) || 0;
+// ULTRA-SMOOTH TIMER — REFRESHES EVERY 500MS (even when paused!)
+function updateTimer() {
+  db.once('value').then(s => {
+    const d = s.val() || {};
+    const c = d.config || {};
+    earned = Number(d.totalEarned) || 0;
 
-  const baseEnd = d.endTime || (Date.now() + 3*60*60*1000);
-  const bonus = Number(d.bonusSeconds) || 0;
-  const paused = !!d.paused;
-  const now = Date.now();
-  let left = paused && d.pausedAt 
-    ? Math.floor((d.pausedAt + bonus*1000 - now)/1000)
-    : Math.floor((baseEnd + bonus*1000 - now)/1000);
-  left = Math.max(0, left);
+    const baseEnd = d.endTime || (Date.now() + 3*60*60*1000);
+    const bonus = Number(d.bonusSeconds) || 0;
+    const paused = !!d.paused;
+    const now = Date.now();
 
-  const h = String(Math.floor(left/3600)).padStart(2,'0');
-  const m = String(Math.floor(left%3600/60)).padStart(2,'0');
-  const sec = String(left%60).padStart(2,'0');
+    let left;
+    if (paused && d.pausedAt) {
+      left = Math.floor((d.pausedAt + bonus*1000 - now)/1000);
+    } else {
+      left = Math.floor((baseEnd + bonus*1000 - now)/1000);
+    }
+    left = Math.max(0, left);
 
-  const timer = document.getElementById('timer');
-  timer.textContent = `${h}:${m}:${sec}`;
-  timer.classList.toggle('bonus', bonus > 0);
-  timer.classList.toggle('paused', paused);
+    const h = String(Math.floor(left/3600)).padStart(2,'0');
+    const m = String(Math.floor(left%3600/60)).padStart(2,'0');
+    const sec = String(left%60).padStart(2,'0');
+    document.getElementById('timer').textContent = `${h}:${m}:${sec}`;
+    document.getElementById('timer').classList.toggle('bonus', bonus > 0);
+    document.getElementById('timer').classList.toggle('paused', paused);
 
-  document.getElementById('raised').textContent = earned.toFixed(2);
-  document.getElementById('goal').textContent = (c.goal||10000).toLocaleString();
-  document.getElementById('subs').textContent = d.subsCount||0;
-  document.getElementById('bits').textContent = d.bitsCount||0;
+    document.getElementById('raised').textContent = earned.toFixed(2);
+    document.getElementById('goal').textContent = (c.goal||10000).toLocaleString();
+    document.getElementById('subs').textContent = d.subsCount||0;
+    document.getElementById('bits').textContent = d.bitsCount||0;
 
-  const container = document.getElementById('goals'); container.innerHTML = '';
-  const goals = Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
-  goals.filter(g=>earned < g.amount+5000).slice(0,3).forEach(g => {
-    const complete = earned >= g.amount;
-    const pct = Math.min(100, (earned/g.amount)*100);
-    const row = document.createElement('div');
-    row.className = `goal ${complete?'complete':''}`;
-    row.innerHTML = `<div class="goal-text">$${g.amount.toLocaleString()} → ${g.description}</div>
-      <div style="position:relative"><div class="bar" style="width:${pct}%"></div>
-      <div class="checkmark ${complete?'show':''}">CHECKMARK</div></div>`;
-    if(complete && !completed.has(g.amount)){completed.add(g.amount);confetti({particleCount:700,spread:150,origin:{y:0.6}});}
-    container.appendChild(row);
+    // GOALS — update smoothly
+    const container = document.getElementById('goals');
+    const goals = Object.values(c.milestones||{}).sort((a,b)=>a.amount-b.amount);
+    const active = goals.filter(g=>earned < g.amount+5000).slice(0,3);
+
+    if (active.length !== container.children.length || JSON.stringify(active) !== container.dataset.active) {
+      container.innerHTML = '';
+      container.dataset.active = JSON.stringify(active);
+
+      active.forEach(g => {
+        const complete = earned >= g.amount;
+        const pct = Math.min(100, (earned/g.amount)*100);
+        const row = document.createElement('div');
+        row.className = `goal ${complete?'complete':''}`;
+        row.innerHTML = `
+          <div class="goal-text">$${g.amount.toLocaleString()} → ${g.description||'Goal'}</div>
+          <div style="position:relative">
+            <div class="bar" style="width:${pct}%"></div>
+            <div class="checkmark ${complete?'show':''}">CHECKMARK</div>
+          </div>`;
+        if (complete && !completed.has(g.amount)) {
+          completed.add(g.amount);
+          confetti({particleCount:800, spread:160, origin:{y:0.58}});
+        }
+        container.appendChild(row);
+      });
+    } else {
+      // Just update progress bars without re-creating DOM
+      container.querySelectorAll('.bar').forEach((bar, i) => {
+        const g = active[i];
+        if (g) bar.style.width = Math.min(100, (earned/g.amount)*100) + '%';
+      });
+    }
   });
-});
+}
 
-// Auto-connect token if provided in URL
+// Start the ultra-smooth refresh loop
+setInterval(updateTimer, 500);
+updateTimer(); // Initial load
+
+// Token auto-connect from URL
 const params = new URLSearchParams(location.search);
 const urlToken = params.get('token') || params.get('sl') || params.get('se') || '';
-if (urlToken) {
-  // Save token to Firebase so dashboard sees it
-  db.child('settings/token').set(urlToken);
-}
+if (urlToken) db.child('settings/token').set(urlToken);
 </script>
 </body>
 </html>

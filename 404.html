@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Donothon 2025 — Ultimate Widget</title>
+<title>Ceres Donothon 2025</title>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.1/firebase-database-compat.js"></script>
 <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
@@ -29,12 +29,20 @@
   <div class="stats">Subs: <span id="subs">0</span> | Highest: <span id="highest">None</span></div>
   <div id="goals"></div>
 </div>
-<div class="token-info" id="tokenInfo">Read-only • Add ?token=... to contribute</div>
+<div class="token-info" id="tokenInfo">Read-only • Add ?token=… to contribute</div>
 
 <script>
-// CHANGE ONLY THESE TWO LINES
-const firebaseConfig = { /* ←← PASTE YOUR FIREBASE CONFIG HERE ←← */ };
-const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1'; // ←← YOUR SECRET PATH ←←
+const firebaseConfig = {
+  apiKey: "AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",
+  authDomain: "ceres-donothon-timer.firebaseapp.com",
+  databaseURL: "https://ceres-donothon-timer-default-rtdb.firebaseio.com",
+  projectId: "ceres-donothon-timer",
+  storageBucket: "ceres-donothon-timer.firebasestorage.app",
+  messagingSenderId: "62539165670",
+  appId: "1:62539165670:web:170c8110449deba628b027",
+  measurementId: "G-9F66NMVB2J"
+};
+const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 
 firebase.initializeApp(firebaseConfig);
 const ref = firebase.database().ref(PATH);
@@ -44,11 +52,10 @@ let token = urlParams.get('token') || urlParams.get('sl') || urlParams.get('se')
 let platform = token && token.length > 50 ? 'streamelements' : 'streamlabs';
 
 if (token) {
-  document.getElementById('tokenInfo').innerHTML = `Connected • ${platform.toUpperCase()} donations active`;
+  document.getElementById('tokenInfo').innerHTML = `Connected • ${platform.toUpperCase()} active`;
   document.getElementById('tokenInfo').style.background = '#004400';
 }
 
-// Apply theme
 ref.child('theme').on('value', s => {
   const t = s.val()||{};
   ['accent','bg','text','grad1','grad2','check','complete'].forEach(k => t[k] && document.documentElement.style.setProperty('--'+k, t[k]));
@@ -59,7 +66,6 @@ ref.on('value', s => {
   const d = s.val()||{}, c = d.config||{};
   earned = d.totalEarned||0;
 
-  // Timer
   const secs = d.paused ? (d.pausedAtSeconds||0) : (d.startTime ? Math.floor((Date.now()-d.startTime)/1000)+(d.bonusSeconds||0) : 0);
   const h = String(Math.floor(secs/3600)).padStart(2,'0');
   const m = String(Math.floor((secs%3600/60)).padStart(2,'0');
@@ -71,7 +77,6 @@ ref.on('value', s => {
   document.getElementById('subs').textContent = d.subsCount||0;
   document.getElementById('highest').textContent = d.highestSub||'None';
 
-  // Goals
   const container = document.getElementById('goals');
   container.innerHTML = '';
   if (!c.milestones) return;
@@ -84,7 +89,7 @@ ref.on('value', s => {
     const pct = Math.min(100, (earned/g.amount)*100);
     const row = document.createElement('div');
     row.className = `goal-row ${complete?'complete':''}`;
-    row.dataset.id = g.id;
+    row.dataset.id = g.id || g.amount;
     row.innerHTML = `
       <div style="font-size:48px;margin-bottom:15px;">$${g.amount.toLocaleString()} → ${g.description}</div>
       <div style="position:relative;">
@@ -93,17 +98,13 @@ ref.on('value', s => {
       </div>
     `;
     if (complete) {
-      if (!newlyCompleted.has(g.id)) { newlyCompleted.add(g.id); confetti({particleCount:400,spread:120,origin:{y:0.6}}); }
-      setTimeout(() => {
-        const el = document.querySelector(`[data-id="${g.id}"]`);
-        if (el) { el.classList.add('hiding'); setTimeout(()=>el.remove(),1000); }
-      }, 20000);
+      if (!newlyCompleted.has(row.dataset.id)) { newlyCompleted.add(row.dataset.id); confetti({particleCount:400,spread:120,origin:{y:0.6}}); }
+      setTimeout(() => { const el = document.querySelector(`[data-id="${row.dataset.id}"]`); if(el){el.classList.add('hiding');setTimeout(()=>el.remove(),1000);} }, 20000);
     }
     container.appendChild(row);
   });
 });
 
-// Connect friend's token if provided
 if (token) {
   const socket = platform === 'streamelements' 
     ? io('wss://realtime.streamelements.com', {transports:['websocket']})

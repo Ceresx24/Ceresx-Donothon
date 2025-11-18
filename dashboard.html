@@ -31,6 +31,8 @@
   .goal-item{background:#1e1c38;padding:14px 18px;border-radius:12px;margin:10px 0;display:flex;gap:12px;align-items:center;border-left:4px solid var(--accent)}
   .status{display:inline-block;padding:10px 26px;border-radius:50px;font-weight:600;background:#333;color:#ff9800;margin-top:10px}
   footer{text-align:center;margin-top:50px;color:var(--muted);font-size:14px}
+  .small {font-size:14px;color:var(--muted)}
+  label {display:block;margin-top:8px;color:var(--muted);font-size:14px}
 </style>
 </head>
 <body>
@@ -39,7 +41,7 @@
   <h1>CERES DONOTHON</h1>
   <p>Control Panel Access</p>
   <input type="password" id="pw" placeholder="Enter password">
-  <button onclick="login()">UNLOCK DASHBOARD</button>
+  <button id="unlockBtn">UNLOCK DASHBOARD</button>
 </div>
 
 <div id="main">
@@ -92,7 +94,7 @@
     </div>
   </div>
 
-  <div class="grid">
+  <div class="grid" style="margin-top:20px">
     <div class="card">
       <h2>Colors & Effects</h2>
       <label>Accent</label><input type="color" id="ac" value="#a855f7" onchange="save('accent',this.value)">
@@ -106,11 +108,11 @@
 
     <div class="card">
       <h2>Visibility & Sound</h2>
-      <label><input type="checkbox" id="hideSubs" onchange="ref.child('theme/hideSubs').set(this.checked)"> Hide Subs/Bits Line</label>
-      <label><input type="checkbox" id="hideGoal" onchange="ref.child('theme/hideGoal').set(this.checked)"> Hide Total Goal Text</label>
-      <label><input type="checkbox" id="hideFooter" onchange="ref.child('theme/hideFooter').set(this.checked)"> Hide Footer Name</label>
-      <label><input type="checkbox" id="confettiOn" checked onchange="ref.child('theme/confetti').set(this.checked)"> Enable Confetti</label>
-      <label>Celebration Sound (empty = RuneScape)</label>
+      <label><input type="checkbox" id="hideSubs"> Hide Subs/Bits Line</label>
+      <label><input type="checkbox" id="hideGoal"> Hide Total Goal Text</label>
+      <label><input type="checkbox" id="hideFooter"> Hide Footer Name</label>
+      <label><input type="checkbox" id="confettiOn" checked> Enable Confetti</label>
+      <label class="small">Celebration Sound (empty = RuneScape)</label>
       <input id="soundUrl" placeholder="https://...">
       <button onclick="ref.child('theme/sound').set(document.getElementById('soundUrl').value.trim()||null)">Save Sound</button>
       <label>Sound Volume</label>
@@ -122,84 +124,282 @@
 </div>
 
 <script>
+/* CONFIG */
 const PATH = 'donothon-ultimate-2025-x7k9p2m4q8z3v6n1';
 const PASSWORDS = ['Rin125','125','Rinmod125'];
 firebase.initializeApp({apiKey:"AIzaSyBFQFPo85fIpaHWl3Kr0PZ6WIm5B6WVusA",authDomain:"ceres-donothon-timer.firebaseapp.com",databaseURL:"https://ceres-donothon-timer-default-rtdb.firebaseio.com",projectId:"ceres-donothon-timer"});
 const ref = firebase.database().ref(PATH);
 
-// Login
-document.getElementById('pw').addEventListener('keypress', e => e.key==='Enter' && login());
+/* Local cache updated by the single Firebase listener */
+let stateCache = {};
+
+/* --- LOGIN --- */
+const pwInput = document.getElementById('pw');
+document.getElementById('unlockBtn').addEventListener('click', login);
+pwInput.addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+
 function login() {
-  if (PASSWORDS.includes(document.getElementById('pw').value.trim())) {
+  const val = pwInput.value.trim();
+  if (PASSWORDS.includes(val)) {
     document.getElementById('loginScreen').style.display = 'none';
     document.getElementById('main').style.display = 'block';
     initDashboard();
-  } else alert('Wrong password');
+  } else {
+    alert('Wrong password');
+  }
 }
 
+/* --- INIT --- */
 function initDashboard() {
-  setInterval(updateLive, 500);
-  ref.on('value', s => {
-    const d = s.val() || {};
-    document.getElementById('status').textContent = d.paused ? 'PAUSED' : (d.endTime ? 'LIVE' : 'STOPPED');
-    document.getElementById('pauseBtn').textContent = d.paused ? 'RESUME' : 'PAUSE';
+  // Central firebase listener - single source of truth
+  ref.on('value', snap => {
+    stateCache = snap.val() || {};
+    // Update immediate UI elements from cache
+    document.getElementById('status').textContent = stateCache.paused ? 'PAUSED' : (stateCache.endTime ? 'LIVE' : 'STOPPED');
+    document.getElementById('pauseBtn').textContent = stateCache.paused ? 'RESUME' : 'PAUSE';
+    document.getElementById('liveRaised').textContent = (stateCache.totalEarned||0).toFixed(2);
+    document.getElementById('liveSubs').textContent = stateCache.subsCount||0;
+    document.getElementById('liveBits').textContent = stateCache.bitsCount||0;
+    // streamer name
+    document.getElementById('liveName').textContent = (stateCache.settings && stateCache.settings.streamerName) ? stateCache.settings.streamerName : 'Ceres';
+    // render theme and goals
+    loadTheme(stateCache.theme || {});
+    renderGoals({ val: () => (stateCache.config && stateCache.config.milestones) ? stateCache.config.milestones : {} });
+    // sound volume -> set range control if present
+    if (stateCache.theme && typeof stateCache.theme.soundVolume !== 'undefined') {
+      const sv = document.getElementById('soundVol');
+      if (sv) sv.value = stateCache.theme.soundVolume;
+    }
   });
-  ref.child('settings/streamerName').on('value', s => document.getElementById('liveName').textContent = s.val() || 'Ceres');
-  ref.child('config/milestones').on('value', renderGoals);
-  ref.child('theme').on('value', s => loadTheme(s.val() || {}));
+
+  // update display every second from local cache (no network calls)
+  setInterval(updateLive, 1000);
 }
 
+/* --- TIMER DISPLAY LOGIC --- */
 function updateLive() {
-  ref.once('value').then(s => {
-    const d = s.val() || {};
-    let left = 0;
-    if (d.endTime || d.pausedAt) {
-      const bonus = (d.bonusSeconds || 0) * 1000;
-      const base = d.paused && d.pausedAt ? d.pausedAt : d.endTime;
-      left = Math.max(0, Math.floor((base + bonus - Date.now()) / 1000));
-    }
-    const h = ('0'+Math.floor(left/3600)).slice(-2);
-    const m = ('0'+Math.floor(left%3600/60)).slice(-2);
-    const sec = ('0'+left%60).slice(-2);
-    document.getElementById('liveTimer').textContent = `${h}:${m}:${sec}`;
-    document.getElementById('liveRaised').textContent = (d.totalEarned||0).toFixed(2);
-    document.getElementById('liveSubs').textContent = d.subsCount||0;
-    document.getElementById('liveBits').textContent = d.bitsCount||0;
-  });
+  const d = stateCache || {};
+  let leftSeconds = 0;
+
+  if (d.paused) {
+    // When paused, we store pausedRemaining in milliseconds; convert to seconds
+    leftSeconds = Math.max(0, Math.ceil((d.pausedRemaining || 0) / 1000));
+  } else if (d.endTime) {
+    const bonusMs = (d.bonusSeconds || 0) * 1000;
+    const effectiveEnd = (d.endTime || 0) + bonusMs;
+    leftSeconds = Math.max(0, Math.ceil((effectiveEnd - Date.now()) / 1000));
+  } else {
+    leftSeconds = 0;
+  }
+
+  const h = String(Math.floor(leftSeconds / 3600)).padStart(2,'0');
+  const m = String(Math.floor((leftSeconds % 3600) / 60)).padStart(2,'0');
+  const s = String(leftSeconds % 60).padStart(2,'0');
+  document.getElementById('liveTimer').textContent = `${h}:${m}:${s}`;
 }
 
-// PERFECT PAUSE/RESUME — THIS IS THE FINAL FIX
+/* --- PAUSE / RESUME (robust) --- */
+/*
+State scheme:
+- endTime: timestamp (ms) when timer should finish (does NOT include pausedRemaining)
+- paused: boolean
+- pausedRemaining: milliseconds remaining when paused (only present when paused)
+- bonusSeconds: seconds added to the endTime when running (persisted)
+*/
 function togglePause() {
-  ref.once('value').then(snap => {
-    const d = snap.val() || {};
-    if (d.paused) {
-      // RESUME
-      const bonus = (d.bonusSeconds || 0) * 1000;
-      const remaining = d.pausedAt + bonus - Date.now();
-      const newEndTime = Date.now() + Math.max(0, remaining);
-      ref.update({ endTime: newEndTime, paused: false, pausedAt: null });
-    } else {
-      // PAUSE
-      const bonus = (d.bonusSeconds || 0) * 1000;
-      const currentRemaining = d.endTime + bonus - Date.now();
-      const frozenAt = Date.now() + currentRemaining;
-      ref.update({ paused: true, pausedAt: frozenAt, endTime: null });
+  // read latest local cache for logic decisions; all writes are via transactions/updates
+  const d = stateCache || {};
+
+  if (d.paused) {
+    // Resume: set endTime = now + pausedRemaining (pausedRemaining already in ms)
+    const remainingMs = Math.max(0, d.pausedRemaining || 0);
+    const newEnd = Date.now() + remainingMs;
+    ref.update({ endTime: newEnd, paused: false, pausedRemaining: null });
+  } else {
+    // Pause: compute remaining relative to endTime + bonusSeconds
+    if (!d.endTime) {
+      // nothing to pause
+      return;
     }
+    const bonusMs = (d.bonusSeconds || 0) * 1000;
+    const remaining = Math.max(0, (d.endTime + bonusMs) - Date.now());
+    // store remaining in pausedRemaining and clear endTime
+    ref.update({ paused: true, pausedRemaining: remaining, endTime: null });
+  }
+}
+
+/* --- START / RESET --- */
+function startTimer() {
+  const threeHours = 3 * 3600 * 1000;
+  ref.update({
+    endTime: Date.now() + threeHours,
+    bonusSeconds: (stateCache.bonusSeconds || 0),
+    paused: false,
+    pausedRemaining: null
   });
 }
 
-function startTimer() { ref.update({endTime: Date.now() + 10800000, bonusSeconds: 0, paused: false, pausedAt: null}); }
-function addMoneyAndTime() { const m=+document.getElementById('addMoney').value||0; const t=+document.getElementById('addMinutes').value||0; if(m||t) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m; x.bonusSeconds=(x.bonusSeconds||0)+t*60; return x;}); document.getElementById('addMoney').value=''; document.getElementById('addMinutes').value=''; }
-function addMoneyOnly() { const m=+document.getElementById('addMoney').value||0; if(m) ref.transaction(x=>{x.totalEarned=(x.totalEarned||0)+m; x.bonusSeconds=(x.bonusSeconds||0)+m*60; return x;}); document.getElementById('addMoney').value=''; }
-function addTimeOnly() { const t=+document.getElementById('addMinutes').value||0; if(t) ref.child('bonusSeconds').transaction(v=>(v||0)+t*60); document.getElementById('addMinutes').value=''; }
-function updateName() { ref.child('settings/streamerName').set(document.getElementById('streamerName').value.trim()||'Ceres'); }
-function saveGoalScale() { ref.child('theme/goalScale').set(document.getElementById('goalScale').value/100); }
-function addGoal() { const a=+document.getElementById('newAmt').value; const desc=document.getElementById('newDesc').value.trim(); if(a&&desc) ref.child('config/milestones').push({amount:a,description:desc}); document.getElementById('newAmt').value=''; document.getElementById('newDesc').value=''; }
-function renderGoals(s) { const g=s.val()||{}; const l=document.getElementById('goalList'); l.innerHTML=''; Object.entries(g).sort((a,b)=>a[1].amount-b[1].amount).forEach(([id,x])=>{ l.innerHTML+=`<div class="goal-item"><span>$${x.amount}</span><input value="${x.description}" onchange="ref.child('config/milestones/${id}/description').set(this.value)"><button style="background:#e91e63;color:white" onclick="ref.child('config/milestones/${id}').remove()">Delete</button></div>`; }); }
+function resetAll() {
+  if (!confirm('This deletes EVERYTHING. Are you sure?')) return;
+  ref.set({
+    config: { milestones: {}, goal: 10000 },
+    settings: {},
+    theme: {},
+    totalEarned: 0,
+    bonusSeconds: 0,
+    endTime: null,
+    paused: false,
+    pausedRemaining: null,
+    subsCount: 0,
+    bitsCount: 0
+  });
+}
+
+/* --- ADD / MONEY / TIME --- */
+function addMoneyAndTime() {
+  const m = parseFloat(document.getElementById('addMoney').value) || 0;
+  const t = parseFloat(document.getElementById('addMinutes').value) || 0;
+  if (!m && !t) return alert('Enter an amount or minutes to add.');
+
+  // atomic update via transaction
+  ref.transaction(x => {
+    x = x || {};
+    x.totalEarned = (x.totalEarned || 0) + m;
+    x.bonusSeconds = (x.bonusSeconds || 0) + Math.round(t * 60);
+    // if paused, also add to pausedRemaining so it immediately affects remaining time
+    if (x.paused) {
+      x.pausedRemaining = (x.pausedRemaining || 0) + Math.round(t * 60) * 1000;
+    }
+    return x;
+  });
+
+  document.getElementById('addMoney').value = '';
+  document.getElementById('addMinutes').value = '';
+}
+
+function addMoneyOnly() {
+  const m = parseFloat(document.getElementById('addMoney').value) || 0;
+  if (!m) return alert('Enter an amount to add.');
+  ref.transaction(x => {
+    x = x || {};
+    x.totalEarned = (x.totalEarned || 0) + m;
+    const extraSec = Math.round(m * 60); // 1 minute per dollar
+    x.bonusSeconds = (x.bonusSeconds || 0) + extraSec;
+    if (x.paused) x.pausedRemaining = (x.pausedRemaining || 0) + extraSec * 1000;
+    return x;
+  });
+  document.getElementById('addMoney').value = '';
+}
+
+function addTimeOnly() {
+  const t = parseFloat(document.getElementById('addMinutes').value) || 0;
+  if (!t) return alert('Enter minutes to add.');
+  ref.transaction(x => {
+    x = x || {};
+    x.bonusSeconds = (x.bonusSeconds || 0) + Math.round(t * 60);
+    if (x.paused) x.pausedRemaining = (x.pausedRemaining || 0) + Math.round(t * 60) * 1000;
+    return x;
+  });
+  document.getElementById('addMinutes').value = '';
+}
+
+/* --- NAME / THEME --- */
+function updateName() {
+  const v = (document.getElementById('streamerName').value || '').trim();
+  ref.child('settings/streamerName').set(v || 'Ceres');
+}
+function saveGoalScale() {
+  const scale = Number(document.getElementById('goalScale').value || 100) / 100;
+  ref.child('theme/goalScale').set(scale);
+}
 function save(k,v) { ref.child('theme').child(k).set(v); }
-function saveColors() { ['accent','text','grad1','grad2','goalHitColor','timerHitColor'].forEach(k=>save(k,document.getElementById(k).value)); }
-function loadTheme(t) { if(t.goalScale){document.getElementById('goalScale').value=t.goalScale*100; document.getElementById('scaleValue').textContent=Math.round(t.goalScale*100);} ['hideSubs','hideGoal','hideFooter','confettiOn'].forEach(k=>document.getElementById(k)&&(t[k]===false?document.getElementById(k).checked=false:document.getElementById(k).checked=true)); if(t.soundVolume)document.getElementById('soundVol').value=t.soundVolume; }
-function resetAll() { if(confirm('This deletes EVERYTHING. Are you sure?')) ref.set({config:{milestones:{},goal:10000},settings:{},theme:{},totalEarned:0,bonusSeconds:0,endTime:null,paused:false,pausedAt:null,subsCount:0,bitsCount:0}); }
+function saveColors() {
+  ['accent','text','grad1','grad2','goalHitColor','timerHitColor'].forEach(k=>{
+    const el = document.getElementById(k);
+    if (el) save(k, el.value);
+  });
+}
+function loadTheme(t) {
+  // goal scale
+  if (t.goalScale) {
+    const vs = Math.round(t.goalScale * 100);
+    const gs = document.getElementById('goalScale');
+    if (gs) { gs.value = vs; document.getElementById('scaleValue').textContent = vs; }
+  }
+  // checkboxes (explicit boolean)
+  ['hideSubs','hideGoal','hideFooter','confettiOn'].forEach(k=>{
+    const el = document.getElementById(k);
+    if (!el) return;
+    el.checked = !!t[k];
+  });
+  if (t.soundVolume !== undefined && document.getElementById('soundVol')) {
+    document.getElementById('soundVol').value = t.soundVolume;
+  }
+}
+
+/* --- MILESTONES --- */
+function addGoal() {
+  const a = parseFloat(document.getElementById('newAmt').value);
+  const desc = (document.getElementById('newDesc').value || '').trim();
+  if (!a || !desc) return alert('Please supply an amount and description.');
+  ref.child('config/milestones').push({ amount: a, description: desc });
+  document.getElementById('newAmt').value = '';
+  document.getElementById('newDesc').value = '';
+}
+
+function renderGoals(snap) {
+  // snap.val() may be an object map keyed by firebase push keys
+  const g = (typeof snap.val === 'function') ? snap.val() : (snap || {});
+  const goalList = document.getElementById('goalList');
+  goalList.innerHTML = '';
+
+  // convert to array and sort by amount
+  const entries = Object.entries(g || {}).map(([id, item]) => ({ id, amount: Number(item.amount || 0), description: item.description || '' }));
+  entries.sort((a,b) => a.amount - b.amount);
+
+  entries.forEach(entry => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'goal-item';
+
+    const amount = document.createElement('span');
+    amount.textContent = `$${entry.amount}`;
+    amount.style.minWidth = '90px';
+    amount.style.fontWeight = '700';
+
+    const input = document.createElement('input');
+    input.value = entry.description;
+    input.style.flex = '1';
+    input.addEventListener('change', function(){
+      ref.child(`config/milestones/${entry.id}/description`).set(this.value);
+    });
+
+    const del = document.createElement('button');
+    del.textContent = 'Delete';
+    del.style.background = '#e91e63';
+    del.style.color = '#fff';
+    del.addEventListener('click', function(){
+      if (confirm('Delete this milestone?')) {
+        ref.child(`config/milestones/${entry.id}`).remove();
+      }
+    });
+
+    wrapper.appendChild(amount);
+    wrapper.appendChild(input);
+    wrapper.appendChild(del);
+    goalList.appendChild(wrapper);
+  });
+
+  if (entries.length === 0) {
+    const p = document.createElement('div');
+    p.className = 'small';
+    p.textContent = 'No milestones set.';
+    goalList.appendChild(p);
+  }
+}
+
+/* defensive: ensure renderGoals called safely if firebase gives null */
+renderGoals({ val: () => ({}) });
+
 </script>
 </body>
 </html>
